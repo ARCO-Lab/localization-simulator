@@ -1,0 +1,18 @@
+site_name: Localization Simulator
+
+theme: 
+  name: 'material'
+  palette:
+    primary: indigo
+    accent: green
+
+plugins:
+  - search  # To have search functionality on the document
+  - mkdocstrings:  # To generate documentation from the code docstrings
+      default_handler: python
+      handlers:
+        python:
+          paths: 
+
+
+nav: # Setting up the navigation. Te below list will be tabs on left panel
