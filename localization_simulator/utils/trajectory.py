@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D
+import pandas as pd
+
 
 
 class Traj2D:
@@ -9,8 +11,11 @@ class Traj2D:
     def __init__(self, poses, interval) -> None:
         self.poses = poses
         self.interval = interval
-        self.x = []
-        self.y = []
+        self.data = {
+            "x":[],
+            "y":[]
+        }
+        self.df = None
     
     def generateTraj(self):
         for cur in range(len(self.poses)-1):
@@ -41,41 +46,45 @@ class Traj2D:
 class Traj3D(Traj2D):
     def __init__(self, poses, interval) -> None:
         super().__init__(poses, interval)
-        self.z = []
+        self.data = {
+            "x":[],
+            "y":[],
+            "z":[]
+        }
     
     def generateTraj(self):
         for cur in range(len(self.poses)-1):
-            self.x.append(np.linspace(self.poses[cur][0], self.poses[cur+1][0], self.interval))
-            self.y.append(np.linspace(self.poses[cur][1], self.poses[cur+1][1], self.interval))
-            self.z.append(np.linspace(self.poses[cur][2], self.poses[cur+1][2], self.interval))
+            self.data["x"].extend(np.linspace(self.poses[cur][0], self.poses[cur+1][0], self.interval))
+            self.data["y"].extend(np.linspace(self.poses[cur][1], self.poses[cur+1][1], self.interval))
+            self.data["z"].extend(np.linspace(self.poses[cur][2], self.poses[cur+1][2], self.interval))
+        self.df = pd.DataFrame(self.data)
 
     def visualizeTraj(self):
 
-        xdata,ydata,zdata = [x for i in self.x for x in i], [y for i in self.y for y in i],[z for i in self.z for z in i]
 
-        global col 
-
-        def update(frame):
-            ax.cla()
-
-            if frame % self.interval == 0:
-                global col
-                col = np.random.rand(3,)
-            ax.scatter(xdata[frame], ydata[frame], zdata[frame], c=col)
-
-            ax.set_xlim(0, max([i[0] for i in self.poses]))
-            ax.set_ylim(0, max([i[1] for i in self.poses]))
-            ax.set_zlim(0, max([i[2] for i in self.poses]))
+        def update_graph(num):
+        
+            data=self.df.iloc[num:num+1]
+            graph.set_data (data.x, data.y)
+            graph.set_3d_properties(data.z)
+            if num % self.interval == 0:
+                graph.set_color(np.random.rand(3,))
+            title.set_text('3D Test, time={}'.format(num))
+            return title, graph, 
 
 
         fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
+        ax = fig.add_subplot(111, projection='3d')
+        title = ax.set_title('3D Test')
 
-        ani = FuncAnimation(fig = fig, func = update, frames = self.interval*(len(self.poses)-1), interval = 500, repeat=False)
+
+        graph, = ax.plot(self.df.x, self.df.y, self.df.z, linestyle="", marker="o")
+
+        ani = FuncAnimation(fig, update_graph, self.interval*(len(self.poses)-1), interval=500, blit=True, repeat=False)
 
         plt.show()
 
-
-t = Traj3D([(0,0,0),(8,8,8),(6,6,6)],6)
-t.generateTraj()
-t.visualizeTraj()
+if __name__ == "__main__":
+    t = Traj3D([(0,0,0),(8,8,8),(6,6,7),(4,5,4),(10,4,2)],6)
+    t.generateTraj()
+    t.visualizeTraj()
