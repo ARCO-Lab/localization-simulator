@@ -19,24 +19,30 @@ class Traj2D:
     
     def generateTraj(self):
         for cur in range(len(self.poses)-1):
-            self.x.append(np.linspace(self.poses[cur][0], self.poses[cur+1][0], self.interval))
-            self.y.append(np.linspace(self.poses[cur][1], self.poses[cur+1][1], self.interval))
+            self.data["x"].extend(np.linspace(self.poses[cur][0], self.poses[cur+1][0], self.interval))
+            self.data["y"].extend(np.linspace(self.poses[cur][1], self.poses[cur+1][1], self.interval))
+        self.df = pd.DataFrame(self.data)
 
     def visualizeTraj(self):
-        fig, ax = plt.subplots()
-        xdata, ydata = [x for i in self.x for x in i], [y for i in self.y for y in i]
-        ln, = plt.plot(xdata, ydata, 'ro')
 
         def init():
             ax.set_xlim(0, max([i[0] for i in self.poses]))
             ax.set_ylim(0, max([i[1] for i in self.poses]))
             return ln,
         
-        def update(frame):
-            ln.set_data(xdata[frame], ydata[frame])
-            if frame % self.interval == 0:
+        def update(num):
+            data = self.df.iloc[num:num+1]
+            ln.set_data(data.x, data.y)
+            if num % self.interval == 0:
                 ln.set_color(np.random.rand(3,))
+            title.set_text('2D Test, time={}'.format(num))
             return ln,
+    
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        title = ax.set_title('2D Test')
+
+        ln, = ax.plot(self.df.x, self.df.y, 'ro')
         
         ani = FuncAnimation(fig, update, frames=self.interval*(len(self.poses)-1),
                             init_func=init, blit=True, interval=500, repeat=False)
@@ -85,6 +91,7 @@ class Traj3D(Traj2D):
         plt.show()
 
 if __name__ == "__main__":
-    t = Traj3D([(0,0,0),(8,8,8),(6,6,7),(4,5,4),(10,4,2)],6)
+    t = Traj2D([(0,0),(8,8),(6,6),(4,5),(10,4)],6)
+    # t = Traj3D([(0,0,0),(8,8,8),(6,6,7),(4,5,4),(10,4,2)],12)
     t.generateTraj()
     t.visualizeTraj()
