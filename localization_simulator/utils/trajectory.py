@@ -35,17 +35,18 @@ class Traj2D:
             ln.set_data(data.x, data.y)
             if num % self.interval == 0:
                 ln.set_color(np.random.rand(3,))
-            title.set_text('2D Test, time={}'.format(num))
-            return ln,
+            title.set_text('2D Test, pose={}'.format(num))
+            return ln,title,
     
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        title = ax.set_title('2D Test')
+        title = ax.text(0.5,0.90, "", bbox={'facecolor':'w', 'alpha':0.5, 'pad':5},
+                transform=ax.transAxes, ha="center")
 
         ln, = ax.plot(self.df.x, self.df.y, 'ro')
         
         ani = FuncAnimation(fig, update, frames=self.interval*(len(self.poses)-1),
-                            init_func=init, blit=True, interval=500, repeat=False)
+                            init_func=init, blit=True, interval=500//self.interval*(len(self.poses)-1), repeat=False)
         plt.show()
 
 
@@ -75,18 +76,19 @@ class Traj3D(Traj2D):
             graph.set_3d_properties(data.z)
             if num % self.interval == 0:
                 graph.set_color(np.random.rand(3,))
-            title.set_text('3D Test, time={}'.format(num))
-            return title, graph, 
+            title.set_text('3D Test, pose={}'.format(num))
+            return graph, title,
 
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        title = ax.set_title('3D Test')
+        title = ax.text2D(0.05,0.95, "", bbox={'facecolor':'w', 'alpha':0.5, 'pad':5},
+                transform=ax.transAxes)
 
 
         graph, = ax.plot(self.df.x, self.df.y, self.df.z, linestyle="", marker="o")
 
-        ani = FuncAnimation(fig, update_graph, self.interval*(len(self.poses)-1), interval=500, blit=True, repeat=False)
+        ani = FuncAnimation(fig, update_graph, self.interval*(len(self.poses)-1), interval=500//self.interval*(len(self.poses)-1), blit=True, repeat=False)
 
         plt.show()
 
