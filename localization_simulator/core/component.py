@@ -1,12 +1,13 @@
 
 class Anchor:
 
-    def __init__(self, location, cutoff, strength, noise) -> None:
+    def __init__(self, location, cutoff, strength, noise, clr) -> None:
         self.location = location
         self.nDim = len(location)
         self.cutoff = cutoff
         self.strength = strength
         self.noise = noise
+        self.clr = clr
 
 class Robot:
 
@@ -19,3 +20,7 @@ class Robot:
             self.nDim = len(initialPose)
         else:
             raise ValueError("Pose Dimensionality is not consistent")
+        
+
+if __name__ == "__main__":
+    print("hello")
