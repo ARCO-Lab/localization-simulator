@@ -1,7 +1,8 @@
 
 class Anchor:
 
-    def __init__(self, location, cutoff, strength, noise, clr) -> None:
+    def __init__(self,name, location, cutoff, strength, noise, clr) -> None:
+        self.name = name
         self.location = location
         self.nDim = len(location)
         self.cutoff = cutoff

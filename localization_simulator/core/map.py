@@ -4,9 +4,13 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import Rectangle
 from matplotlib.animation import FuncAnimation
 import pandas as pd
+import argparse
 
 from .component import Anchor
 from ..utils.trajectory import Traj2D, Traj3D
+from .noise import Noise
+import tkinter as tk
+from tkinter import ttk
 
 class Map:
     
@@ -15,20 +19,9 @@ class Map:
         self.nDim = len(dim)
         self.fig, self.ax = Plot.create2D(self.dim) if self.nDim==2 else Plot.create3D(self.dim)
         self.trajectory = None
-
-    # PLACEHOLDER UNTIL SUITABLE REPLACEMENT IS FOUND TO REPRESENT ANCHORS ON 3D PLOT
-    def plt_sphere(self,list_center, list_radius):
-        for c, r in zip(list_center, list_radius):
-            
-            # draw sphere
-            u, v = np.mgrid[0:2*np.pi:50j, 0:np.pi:50j]
-            x = r*np.cos(u)*np.sin(v)
-            y = r*np.sin(u)*np.sin(v)
-            z = r*np.cos(v)
-
-            self.ax.plot_surface(x-c[0], y-c[1], z-c[2], color="green", alpha=0.5*np.random.random()+0.5)
     
     def placeAnchor(self, anchorList):
+        self.anchors = anchorList
         if self.nDim == 2:
             for a in anchorList:
                 self.ax.add_patch(Rectangle(a.location,0.5,0.5,fc="black",ec=a.clr))
@@ -44,7 +37,26 @@ class Map:
             self.trajectory = Traj3D(poses, interval)
         self.trajectory.generateTraj()
 
+    def createWindow(self):
+        root = tk.Tk()
+        root.title('Pose Tracker')
+
+        value_label = tk.Label(root, text="Pose Tracker", font=("Arial",30)).grid(row=0, columnspan=4)
+
+        cols = ('Pose', 'Anchor', 'Distance', 'Bias')
+        listBox = ttk.Treeview(root, columns=cols, show='headings')
+        # set column headings
+        for col in cols:
+            listBox.heading(col, text=col)    
+        listBox.grid(row=1, column=0, columnspan=2)
+
+        return root, value_label, listBox
+
     def visualize2D(self):
+
+        def show(listBox, send, num):
+            for i in send:
+                listBox.insert("", "end", values=(num,i[0], i[1], i[2]))
 
         def update(num):
             data = self.trajectory.df.iloc[num:num+1]
@@ -52,6 +64,12 @@ class Map:
             if num % self.trajectory.interval == 0:
                 ln.set_color(np.random.rand(3,))
             title.set_text('2D Test, pose={}'.format(num))
+
+            send = []
+            for a in self.anchors:
+                send.append([a.name,np.linalg.norm(self.trajectory.df.iloc[num]-a.location),a.noise(np.linalg.norm(self.trajectory.df.iloc[num]-a.location))])
+
+            show(listBox, send, num)
             return ln,title,
 
 
@@ -59,13 +77,20 @@ class Map:
                 transform=self.ax.transAxes, ha="center")
 
         ln, = self.ax.plot(self.trajectory.df.x, self.trajectory.df.y, 'ro')
+
+        value_root, value_label, listBox = self.createWindow()
         
         ani = FuncAnimation(self.fig, update, frames=self.trajectory.interval*(len(self.trajectory.poses)-1),
                             blit=True, interval=500//self.trajectory.interval*(len(self.trajectory.poses)-1), repeat=False)
+        
         plt.show()
-
+        value_root.mainloop()
     
     def visualize3D(self):
+    
+        def show(listBox, send, num):
+            for i in send:
+                listBox.insert("", "end", values=(num, i[0], i[1], i[2]))
 
         def update(num):
             data=self.trajectory.df.iloc[num:num+1]
@@ -74,6 +99,13 @@ class Map:
             if num % self.trajectory.interval == 0:
                 graph.set_color(np.random.rand(3,))
             title.set_text('3D Test, pose={}'.format(num))
+
+            send = []
+            for a in self.anchors:
+                send.append([a.name,np.linalg.norm(self.trajectory.df.iloc[num]-a.location),a.noise(np.linalg.norm(self.trajectory.df.iloc[num]-a.location))])
+
+            show(listBox, send, num)
+
             return graph, title,
 
         title = self.ax.text2D(0.05,0.95, "", bbox={'facecolor':'w', 'alpha':0.5, 'pad':5},
@@ -82,9 +114,12 @@ class Map:
 
         graph, = self.ax.plot(self.trajectory.df.x, self.trajectory.df.y, self.trajectory.df.z, linestyle="", marker="o")
 
+        value_root, value_label, listBox = self.createWindow()
+
         ani = FuncAnimation(self.fig, update, self.trajectory.interval*(len(self.trajectory.poses)-1), interval=500//self.trajectory.interval*(len(self.trajectory.poses)-1), blit=True, repeat=False)
 
         plt.show()
+        value_root.mainloop()
 
 class Plot:
 
@@ -106,17 +141,42 @@ class Plot:
         return fig, ax
 
 
+def parseArgs():
+        retArgs = []
+        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        parser.add_argument("--2", "-dim2", default = False, required = False, action="store_true", help="Flag to show 2D.")
+        parser.add_argument("--3", "-dim3", default = False, required = False, action="store_true", help="Flag to show 3D.")
+        args = parser.parse_args()
+        for arg in vars(args):
+             retArgs.append(getattr(args, arg))
+        return retArgs
+ 
 
 
 if __name__ == "__main__":
-    # anchorList = [Anchor((3,3),0,0,0,"red"),Anchor((14,14),0,0,0,"blue"),Anchor((18,12),0,0,0,"red")]
-    # m = Map((20,20))
-    # m.placeAnchor(anchorList)
-    # m.loadTraj([(0,0),(8,8),(6,6),(4,5),(10,4)],6)
-    # m.visualize2D()
 
-    anchorList = [Anchor((3,3,3),0,0,0,"red"),Anchor((14,14,14),0,0,0,"blue"),Anchor((18,12,13),0,0,0,"red")]
-    m = Map((20,20,20))
-    m.placeAnchor(anchorList)
-    m.loadTraj([(0,0,0),(8,8,8),(6,6,7),(4,5,4),(10,4,2)],12)
-    m.visualize3D()
+    def routine2d():
+        anchorList2d = [Anchor("a",(3,3),0,0,Noise.gonzalez,"red"),Anchor("b",(14,14),0,0,Noise.gonzalez,"blue"),Anchor("c",(18,12),0,0,Noise.gonzalez,"red")]
+        m = Map((20,20))
+        m.placeAnchor(anchorList2d)
+        m.loadTraj([(0,0),(8,8),(6,6),(4,5),(10,4)],6)
+        m.visualize2D()
+
+    def routine3d():
+        anchorList3d = [Anchor("a",(3,3,3),0,0,Noise.gonzalez,"red"),Anchor("b",(14,14,14),0,0,Noise.gonzalez,"blue"),Anchor("c",(18,12,13),0,0,Noise.gonzalez,"red")]
+        m = Map((20,20,20))
+        m.placeAnchor(anchorList3d)
+        m.loadTraj([(0,0,0),(8,8,8),(6,6,7),(4,5,4),(10,4,2)],12)
+        m.visualize3D()
+
+    use2d, use3d = parseArgs()
+
+    if use2d == use3d:
+        np.random.choice([routine2d,routine3d])()
+    elif use2d:
+        routine2d()
+    else:
+        routine3d()
+
+
+    
