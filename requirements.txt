@@ -5,3 +5,5 @@ numpy
 matplotlib
 ipympl
 pandas
+scipy
+autograd

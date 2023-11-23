@@ -8,7 +8,8 @@ import argparse
 
 from .component import Anchor
 from ..utils.trajectory import Traj2D, Traj3D
-from .noise import Noise
+from ..utils.nls import NLS
+from .error import Error
 import tkinter as tk
 from tkinter import ttk
 
@@ -19,6 +20,8 @@ class Map:
         self.nDim = len(dim)
         self.fig, self.ax = Plot.create2D(self.dim) if self.nDim==2 else Plot.create3D(self.dim)
         self.trajectory = None
+        self.points = []
+        self.gradNorms = []
     
     def placeAnchor(self, anchorList):
         self.anchors = anchorList
@@ -43,7 +46,7 @@ class Map:
 
         value_label = tk.Label(root, text="Pose Tracker", font=("Arial",30)).grid(row=0, columnspan=4)
 
-        cols = ('Pose', 'Anchor', 'Distance', 'Bias')
+        cols = ('Pose', 'Anchor', 'Distance', 'P(dist; mean, std_dev)')
         listBox = ttk.Treeview(root, columns=cols, show='headings')
         # set column headings
         for col in cols:
@@ -53,6 +56,8 @@ class Map:
         return root, value_label, listBox
 
     def visualize2D(self):
+
+        nls = NLS(self.points,self.gradNorms, np.array([a.location for a in self.anchors]),variance=0.01, max_error=0.1)
 
         def show(listBox, send, num):
             for i in send:
@@ -65,9 +70,14 @@ class Map:
                 ln.set_color(np.random.rand(3,))
             title.set_text('2D Test, pose={}'.format(num))
 
+            # guess = np.array([np.random.uniform(0, self.dim[0]), np.random.uniform(0, self.dim[1])])
+            guess = np.array([10.39,4.22])
+            nls.process(np.array([data.x.item(),data.y.item()]), guess)
+
             send = []
             for a in self.anchors:
-                send.append([a.name,np.linalg.norm(self.trajectory.df.iloc[num]-a.location),a.noise(np.linalg.norm(self.trajectory.df.iloc[num]-a.location))])
+                dist = a.getDist(self.trajectory.df.iloc[num])
+                send.append([a.name,dist,a.error.getPDF(dist)])
 
             show(listBox, send, num)
             return ln,title,
@@ -102,7 +112,8 @@ class Map:
 
             send = []
             for a in self.anchors:
-                send.append([a.name,np.linalg.norm(self.trajectory.df.iloc[num]-a.location),a.noise(np.linalg.norm(self.trajectory.df.iloc[num]-a.location))])
+                dist = a.getDist(self.trajectory.df.iloc[num])
+                send.append([a.name,dist,a.error.getPDF(dist)])
 
             show(listBox, send, num)
 
@@ -151,19 +162,45 @@ def parseArgs():
              retArgs.append(getattr(args, arg))
         return retArgs
  
+import matplotlib.pyplot as plt
+
+def postPlot(points, gradNorms):
+    for i, (p, gn) in enumerate(zip(points, gradNorms), start=1):
+        x, y = zip(*p)
+        fig, axs = plt.subplots(3)
+        fig.suptitle(f"Approx for {x[0]},{y[0]}")
+
+        axs[0].scatter(x[1], y[1], color='green', marker='o', label="Initial")
+
+        axs[0].scatter(x[-1], y[-1], color='blue', marker='x', label="Final")
+
+        axs[0].scatter(x[2:-1], y[2:-1], color='red', marker='x')
+
+        for i, (xi, yi) in enumerate(zip(x[2:-1], y[2:-1]), start=1):
+            axs[0].text(xi, yi, str(i), ha='right', va='bottom')
+
+        axs[1].plot(range(1, len(gn) + 1), gn, color='purple', marker='o', label='Grad Norms')
+
+        log_gn = np.log(gn)
+        axs[2].plot(range(1, len(log_gn) + 1), log_gn, color='orange', marker='o', label='Log Grad Norms')
+
+        plt.show(block=False)
+        input("Press a key ")
+        plt.close()
 
 
 if __name__ == "__main__":
 
     def routine2d():
-        anchorList2d = [Anchor("a",(3,3),0,0,Noise.gonzalez,"red"),Anchor("b",(14,14),0,0,Noise.gonzalez,"blue"),Anchor("c",(18,12),0,0,Noise.gonzalez,"red")]
+        anchorList2d = [Anchor("a",(3,3),0,(0,3),"red"),Anchor("b",(14,14),0,(0,3),"blue"),Anchor("c",(18,12),0,(0,3),"red")]
         m = Map((20,20))
         m.placeAnchor(anchorList2d)
         m.loadTraj([(0,0),(8,8),(6,6),(4,5),(10,4)],6)
         m.visualize2D()
+        postPlot(m.points,m.gradNorms)
 
     def routine3d():
-        anchorList3d = [Anchor("a",(3,3,3),0,0,Noise.gonzalez,"red"),Anchor("b",(14,14,14),0,0,Noise.gonzalez,"blue"),Anchor("c",(18,12,13),0,0,Noise.gonzalez,"red")]
+        anchorList3d = [Anchor("a",(3,3,3),0,(0,3),"red"),Anchor("b",(14,14,14),0,(0,3),"blue"),Anchor("c",(18,12,13),0,(0,3),"red")]
         m = Map((20,20,20))
         m.placeAnchor(anchorList3d)
         m.loadTraj([(0,0,0),(8,8,8),(6,6,7),(4,5,4),(10,4,2)],12)
