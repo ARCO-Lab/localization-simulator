@@ -13,7 +13,6 @@ class Anchor:
     def getDist(self, pose):
         return np.linalg.norm(pose-self.location)
         
-
 class Robot:
 
     def __init__(self, trajectory) -> None:
@@ -28,4 +27,4 @@ class Robot:
         
 
 if __name__ == "__main__":
-    print("hello")
+    pass

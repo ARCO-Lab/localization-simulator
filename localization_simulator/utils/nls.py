@@ -1,7 +1,5 @@
 import autograd.numpy as np
 from autograd import grad, hessian
-import matplotlib.pyplot as plt
-
 class NLS:
 
     def __init__(self,points,gradNorms, anchors, variance, max_error) -> None:
@@ -11,7 +9,6 @@ class NLS:
         self.variance = variance
         self.max_error = max_error
 
-    # Noise/Variance needs to be fixed
     def addNoise(self, pose):
         x, y = pose
         distances = np.sqrt((self.anchors[:, 0] - x)**2 + (self.anchors[:, 1] - y)**2)
@@ -26,9 +23,11 @@ class NLS:
     # Using Newtons method and autograd for gradient and hessian
     def estimatePose(self, est_pose, measurements):
         est_x, est_y = est_pose
-        
+
+        print(f"est pose: {est_pose}")
+        print(f"measurement: {measurements}")
+
         g = grad(lambda p: np.sum((self.eq(p) - measurements)**2))(est_pose)
-        # print(f"The gradient norm is: {np.linalg.norm(g)}")
         h = hessian(lambda p: np.sum((self.eq(p) - measurements)**2))(est_pose)
         
         h_inv = np.linalg.pinv(h)
@@ -56,8 +55,6 @@ class NLS:
                 break
         self.points.append(p)
         self.gradNorms.append(grads)
-
-# Add visualizations
 
 if __name__ == "__main__":
     a = NLS(None, np.array([[2.0, 2.0], [5.0, 5.0], [8.0, 2.0]]), 0.01, 0.1)
