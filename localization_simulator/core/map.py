@@ -1,3 +1,11 @@
+"""
+A module for the map and assembling components for a simulation.
+
+Todo:
+    * Decouple other entities from maps and make it simpler
+    * Allow for multiple trajectories
+"""
+
 from matplotlib import pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
@@ -14,8 +22,23 @@ import tkinter as tk
 from tkinter import ttk
 
 class Map:
-    
+    """Module for creating simulation maps.
+
+    Attributes:
+        dim (tuple[int]): The dimensions of the map.
+        nDim (int): The dimensionality of the map (2 or 3).
+        fig (matplotlib.figure.Figure): Matplotlib figure for visualization.
+        ax (matplotlib.axes._axes.Axes): Matplotlib axes for visualization.
+        trajectory (Traj2D or Traj3D): The trajectory for the simulation (either 2D or 3D).
+        points (list[list[Numpy.ndarray(float)]]): The list of points for each pose.
+        gradNorms (list[list[float]]): The list of gradient norms for each pose.
+    """
     def __init__(self, dim) -> None:
+        """Init method
+
+        Args:
+            dim (tuple[int]): The dimension of the map to be created.
+        """
         self.dim = dim
         self.nDim = len(dim)
         self.fig, self.ax = Plot.create2D(self.dim) if self.nDim==2 else Plot.create3D(self.dim)
@@ -24,6 +47,11 @@ class Map:
         self.gradNorms = []
     
     def placeAnchor(self, anchorList):
+        """Method for placing anchors in a map.
+
+        Args:
+            anchorList (list[Anchor]): The list of anchors to place in a map.
+        """
         self.anchors = anchorList
         if self.nDim == 2:
             for a in anchorList:
@@ -34,6 +62,12 @@ class Map:
 
 
     def loadTraj(self, poses, interval):
+        """Method for loading a trajectory into a map
+
+        Args:
+            poses (list[tuple[float]]): The desired poses for the trajectory.
+            interval (int): The number of substeps in between each pose. Can be thought as the number of points in a straight line between poses.
+        """
         if self.nDim == 2:
             self.trajectory = Traj2D(poses, interval)
         else:
@@ -41,12 +75,19 @@ class Map:
         self.trajectory.generateTraj()
 
     def createWindow(self):
+        """Creates a window to display pose tracking information using Tkinter.
+
+        The window currently displays the pose number as well as the distance and likelihood of observing the distance in the probability density for each anchor.
+
+        Returns:
+            tuple[tk.Tk, tk.Label, ttk.Treeview]: The main tkinter window, the title widgetm and the treeview widget.
+        """
         root = tk.Tk()
         root.title('Pose Tracker')
 
         value_label = tk.Label(root, text="Pose Tracker", font=("Arial",30)).grid(row=0, columnspan=4)
 
-        cols = ('Pose', 'Anchor', 'Distance', 'P(dist; mean, std_dev)')
+        cols = ('Pose', 'Anchor', 'Distance', 'Probability Density')
         listBox = ttk.Treeview(root, columns=cols, show='headings')
         for col in cols:
             listBox.heading(col, text=col)    
@@ -55,14 +96,30 @@ class Map:
         return root, value_label, listBox
 
     def visualize2D(self):
-
-        nls = NLS(self.points,self.gradNorms, np.array([a.location for a in self.anchors]),variance=0.01, max_error=0.1)
+        """Visualizes the trajectory (2D) using Matplotlib animation
+        """
+        nls = NLS(self.points,self.gradNorms, np.array([a.location for a in self.anchors]),variance=0.01, tolerance=0.1)
 
         def show(listBox, send, num):
+            """Populate the treeview widget with values at each timestep
+
+            Args:
+                listBox (ttk.Treeview): The Treeview widget.
+                send (list): Values to be displayed in the Treeview widget.
+                num (int): The timestep
+            """
             for i in send:
                 listBox.insert("", "end", values=(num,i[0], i[1], i[2]))
 
         def update(num):
+            """Updates the line depicting the trajectory after each animation frame.
+
+            Args:
+                num (int): the frame number representing the timestep to be visualized.
+
+            Returns:
+                tuple[matplotlib.lines.Line2D,matplotlib.text.Text]: the updated line and title.
+            """
             data = self.trajectory.df.iloc[num:num+1]
             ln.set_data(data.x, data.y)
             if num % self.trajectory.interval == 0:
@@ -94,12 +151,29 @@ class Map:
         value_root.mainloop()
     
     def visualize3D(self):
+        """Visualizes the trajectory (3D) using Matplotlib animation
+        """
     
         def show(listBox, send, num):
+            """Populate the treeview widget with values at each timestep
+
+            Args:
+                listBox (ttk.Treeview): The Treeview widget.
+                send (list): Values to be displayed in the Treeview widget.
+                num (int): The timestep
+            """
             for i in send:
                 listBox.insert("", "end", values=(num, i[0], i[1], i[2]))
 
         def update(num):
+            """Updates the trajectory graph after each animation frame.
+
+            Args:
+                num (int): the frame number to be visualized.
+
+            Returns:
+               (tuple[mpl_toolkits.mplot3d.art3d.Line3D,matplotlib.text.Text]) : the updated graph and title.
+            """
             data=self.trajectory.df.iloc[num:num+1]
             graph.set_data (data.x, data.y)
             graph.set_3d_properties(data.z)

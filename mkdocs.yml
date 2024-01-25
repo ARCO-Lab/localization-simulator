@@ -7,12 +7,22 @@ theme:
     accent: green
 
 plugins:
-  - search  # To have search functionality on the document
-  - mkdocstrings:  # To generate documentation from the code docstrings
+  - search
+  - mkdocstrings:
       default_handler: python
       handlers:
         python:
-          paths: 
+          paths: [localization_simulator]
 
 
-nav: # Setting up the navigation. Te below list will be tabs on left panel
+nav:
+  - core:
+    - main: main.md
+    - component: component.md
+    - error: error.md
+    - map: map.md
+    - plot: plot.md
+  - utils:
+    - helper: helper.md
+    - Newton Solver: nls.md
+    - trajectory: trajectory.md

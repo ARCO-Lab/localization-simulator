@@ -1,7 +1,26 @@
+"""
+A module for creating components that can be used within the simulation map such as anchors, robots, or other potential entities for the simulation environment.
+
+Todo:
+    * Fully implement and integrate robot component
+    * Rework the trajectory module in utils as a robot component so multiple paths can be registered and other behaviour can be modelled in addition to trajectory
+    * Add anchor cutoff
+"""
+
 import numpy as np
+
 from .error import Error
 class Anchor:
+    """Component module to model anchor/sensor/beacon behaviour in a simulation environment.
 
+    Attributes:
+        name (str): Anchor name/id.
+        location (tuple[float, float, optional(float)]): A tuple of length 2 (2D map) or 3 (3D map) to represent the location of the anchor.
+        nDim (int): Anchor dimensionality (either 2 or 3).
+        cutoff (float): Radius around the anchor, in which readings can only be made for objects within the cutoff.
+        error (tuple[int]): Anchor error model.
+        clr (str): Colour of anchor for visualization purposes.
+    """
     def __init__(self,name, location, cutoff, error, clr) -> None:
         self.name = name
         self.location = location
@@ -14,7 +33,13 @@ class Anchor:
         return np.linalg.norm(pose-self.location)
         
 class Robot:
+    """Component module to model robot behaviour in a simulation environment (currently not used)
 
+    Attributes:
+        curPose (str): Current pose of the robot.
+        trajectory (Trajectory): A designated robot trajectory.
+        nDim (str): Robot dimensionality (either 2 or 3).
+    """
     def __init__(self, trajectory) -> None:
         self.curPose = None
         self.trajectory = trajectory

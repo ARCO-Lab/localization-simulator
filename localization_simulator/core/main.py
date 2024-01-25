@@ -1,11 +1,18 @@
+"""
+The main script to run the simulator
 
+Todo:
+    * Improve the process of creating routines
+"""
 from .component import Anchor
 from .map import Map
 from .plot import Plot, postPlot
 from ..utils.helper import parseArgs
 import numpy as np
 
-def routine2d():
+def sampleRoutine2d():
+    """A sample routine for a 2D simulation
+    """
     anchorList2d = [Anchor("a",(3,3),0,(0,3),"red"),Anchor("b",(14,14),0,(0,3),"blue"),Anchor("c",(18,12),0,(0,3),"red")]
     m = Map((20,20))
     m.placeAnchor(anchorList2d)
@@ -13,7 +20,9 @@ def routine2d():
     m.visualize2D()
     postPlot(m.points,m.gradNorms)
 
-def routine3d():
+def sampleRoutine3d():
+    """A sample routine for a 3D simulation
+    """
     anchorList3d = [Anchor("a",(3,3,3),0,(0,3),"red"),Anchor("b",(14,14,14),0,(0,3),"blue"),Anchor("c",(18,12,13),0,(0,3),"red")]
     m = Map((20,20,20))
     m.placeAnchor(anchorList3d)
@@ -21,11 +30,12 @@ def routine3d():
     m.visualize3D()
 
 if __name__ == "__main__":
+    # Used to parse arguments 
     use2d, use3d = parseArgs()
 
     if use2d == use3d:
-        np.random.choice([routine2d,routine3d])()
+        np.random.choice([sampleRoutine2d,sampleRoutine3d])()
     elif use2d:
-        routine2d()
+        sampleRoutine2d()
     else:
-        routine3d()
+        sampleRoutine3d()
