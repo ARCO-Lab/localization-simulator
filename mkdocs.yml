@@ -1,10 +1,11 @@
 site_name: Localization Simulator
-
+extra_css:
+  - stylesheets/extra.css
 theme: 
   name: 'material'
   palette:
-    primary: indigo
-    accent: green
+    primary: custom
+    accent: amber
 
 plugins:
   - search
