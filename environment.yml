@@ -74,4 +74,4 @@ dependencies:
       - watchdog==3.0.0
       - wcwidth==0.2.6
       - widgetsnbextension==4.0.9
-prefix: /home/ethanseq/miniconda3/envs/localization
+prefix: /home/user/miniconda3/envs/localization

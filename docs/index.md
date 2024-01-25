@@ -18,6 +18,7 @@ More changes to be made for the simulator and documentation!
 
 ### Installing the conda environment/requirements
 * `conda env create -f environment.yml` - Create the localization conda environment. Please note that you'll need to add pip as a dependency in the `environment.yml` file. You can still proceed without doing so but risk unwanted behavior.
+Please change the prefix in the `environment.yml` to wherever you want to store the environment.
 * `pip install -r requirements.txt` - Install all the packages specified in the requirements file into your own environment.
 
 ## Project layout
