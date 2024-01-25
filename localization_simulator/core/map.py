@@ -80,7 +80,7 @@ class Map:
         The window currently displays the pose number as well as the distance and likelihood of observing the distance in the probability density for each anchor.
 
         Returns:
-            tuple[tk.Tk, tk.Label, ttk.Treeview]: The main tkinter window, the title widgetm and the treeview widget.
+            (tuple[tk.Tk, tk.Label, ttk.Treeview]): The main tkinter window, the title widgetm and the treeview widget.
         """
         root = tk.Tk()
         root.title('Pose Tracker')
