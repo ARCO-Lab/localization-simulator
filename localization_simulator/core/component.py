@@ -22,6 +22,15 @@ class Anchor:
         clr (str): Colour of anchor for visualization purposes.
     """
     def __init__(self,name, location, cutoff, error, clr) -> None:
+        """Init method
+
+        Args:
+            name (str): Anchor name/id.
+            location (tuple[float, float, optional(float)]): A tuple of length 2 (2D map) or 3 (3D map) to represent the location of the anchor.
+            cutoff (float): Radius around the anchor, in which readings can only be made for objects within the cutoff.
+            error (tuple[int]): Anchor error model.
+            clr (str): Colour of anchor for visualization purposes.
+        """
         self.name = name
         self.location = location
         self.nDim = len(location)
@@ -29,8 +38,17 @@ class Anchor:
         self.error = Error(error[0],error[1])
         self.clr = clr
 
-    def getDist(self, pose):
-        return np.linalg.norm(pose-self.location)
+    def getDist(self, pose, anchor=None):
+        """Gets the euclidean distance between a pose and anchor.
+
+        Args:
+            pose (pandas.core.series.Series): The pose
+            anchor (tuple[float], optional): In case a different anchor location needs to be used. Defaults to None.
+
+        Returns:
+            (float): The euclidean distance between the pose and anchor
+        """
+        return np.linalg.norm(pose-anchor if anchor else pose-self.location)
         
 class Robot:
     """Component module to model robot behaviour in a simulation environment (currently not used)
@@ -41,6 +59,14 @@ class Robot:
         nDim (str): Robot dimensionality (either 2 or 3).
     """
     def __init__(self, trajectory) -> None:
+        """Init Method
+
+        Args:
+            trajectory (Traj2D or Traj3D): A robot trajectory 
+
+        Raises:
+            ValueError: If the dimensionality in a trajectory ever changes.
+        """
         self.curPose = None
         self.trajectory = trajectory
 
@@ -50,6 +76,5 @@ class Robot:
         else:
             raise ValueError("Pose Dimensionality is not consistent")
         
-
 if __name__ == "__main__":
     pass

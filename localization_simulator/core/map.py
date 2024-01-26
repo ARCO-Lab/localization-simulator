@@ -4,6 +4,8 @@ A module for the map and assembling components for a simulation.
 Todo:
     * Decouple other entities from maps and make it simpler
     * Allow for multiple trajectories
+    * Organize imports
+    * CSV
 """
 
 from matplotlib import pyplot as plt
@@ -12,8 +14,10 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import Rectangle
 from matplotlib.animation import FuncAnimation
 import pandas as pd
+import random
 
 from .plot import Plot
+from .inf import isotropic, newAnchorPos
 from .component import Anchor
 from ..utils.trajectory import Traj2D, Traj3D
 from ..utils.nls import NLS
@@ -30,8 +34,9 @@ class Map:
         fig (matplotlib.figure.Figure): Matplotlib figure for visualization.
         ax (matplotlib.axes._axes.Axes): Matplotlib axes for visualization.
         trajectory (Traj2D or Traj3D): The trajectory for the simulation (either 2D or 3D).
-        points (list[list[Numpy.ndarray(float)]]): The list of points for each pose.
+        points (list[list[numpy.ndarray(float)]]): The list of points for each pose.
         gradNorms (list[list[float]]): The list of gradient norms for each pose.
+        isotropic (numpy.ndarray(int)): Isotropic covarriance matrix for the prior
     """
     def __init__(self, dim) -> None:
         """Init method
@@ -45,6 +50,7 @@ class Map:
         self.trajectory = None
         self.points = []
         self.gradNorms = []
+        self.isotropic = None
     
     def placeAnchor(self, anchorList):
         """Method for placing anchors in a map.
@@ -53,14 +59,14 @@ class Map:
             anchorList (list[Anchor]): The list of anchors to place in a map.
         """
         self.anchors = anchorList
+        self.isotropic = isotropic(self.nDim,random.uniform(1,2))
         if self.nDim == 2:
             for a in anchorList:
                 self.ax.add_patch(Rectangle(a.location,0.5,0.5,fc="black",ec=a.clr))
         else:
             for a in anchorList:
                 self.ax.scatter(a.location[0], a.location[1], a.location[2], c='black', edgecolors=a.clr ,marker='o', s=100)
-
-
+            
     def loadTraj(self, poses, interval):
         """Method for loading a trajectory into a map
 
@@ -98,7 +104,7 @@ class Map:
     def visualize2D(self):
         """Visualizes the trajectory (2D) using Matplotlib animation
         """
-        nls = NLS(self.points,self.gradNorms, np.array([a.location for a in self.anchors]),variance=0.01, tolerance=0.1)
+        nls = NLS(self.points,self.gradNorms,variance=0.01, tolerance=0.1)
 
         def show(listBox, send, num):
             """Populate the treeview widget with values at each timestep
@@ -122,25 +128,33 @@ class Map:
             """
             data = self.trajectory.df.iloc[num:num+1]
             ln.set_data(data.x, data.y)
+
+            newAncs = []
+            for i in newAnchorPos([a.location for a in self.anchors], self.isotropic):
+                newAncs.append(i)
+            anc.set_data([i[0] for i in newAncs],[i[1] for i in newAncs])
+
             if num % self.trajectory.interval == 0:
                 ln.set_color(np.random.rand(3,))
             title.set_text('2D Test, pose={}'.format(num))
 
             guess = np.array([np.random.uniform(0, self.dim[0]), np.random.uniform(0, self.dim[1])])
-            nls.process(np.array([data.x.item(),data.y.item()]), guess)
+            nls.process(np.array([data.x.item(),data.y.item()]), guess, np.array(newAncs))
 
             send = []
-            for a in self.anchors:
-                dist = a.getDist(self.trajectory.df.iloc[num])
+            for a, a_new in zip(self.anchors, newAncs):
+                print(f"{a.location} vs {a_new}")
+                dist = a.getDist(self.trajectory.df.iloc[num], tuple(a_new))
                 send.append([a.name,dist,a.error.getPDF(dist)])
 
             show(listBox, send, num)
-            return ln,title,
+            return ln,anc,title,
 
         title = self.ax.text(0.5,0.90, "", bbox={'facecolor':'w', 'alpha':0.5, 'pad':5},
                 transform=self.ax.transAxes, ha="center")
 
         ln, = self.ax.plot(self.trajectory.df.x, self.trajectory.df.y, 'ro')
+        anc, = self.ax.plot([],[], 'bx')
 
         value_root, value_label, listBox = self.createWindow()
         

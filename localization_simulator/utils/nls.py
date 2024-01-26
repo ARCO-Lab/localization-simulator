@@ -14,27 +14,24 @@ class NLS:
     Attributes:
         points (list[list[numpy.ndarray[float]]]): All initial and subsequent approximations for each timestep.
         gradNorms (list[list[float]]): Gradient norms for the intial and subsequent approximations for each timestep.
-        anchors (list[tuple[float]]): Locations of each anchor (either 2D or 3D).
         variance (float): The variance to be used for adding noise to measurements.
         tolerance (float): the maximum error before Newtons method stops iterating.
     """
-    def __init__(self,points,gradNorms, anchors, variance, tolerance) -> None:
+    def __init__(self,points,gradNorms, variance, tolerance) -> None:
         """Init method
 
         Args:
             points (list[list[numpy.ndarray[float]]]): All initial and subsequent approximations for each timestep.
             gradNorms (list[list[float]]): Gradient norms for the intial and subsequent approximations for each timestep.
-            anchors (list[tuple[float]]): Locations of each anchor (either 2D or 3D).
             variance (float): The variance to be used for adding noise to measurements.
             tolerance (float): the maximum error before Newtons method stops iterating.
         """
         self.points = points
         self.gradNorms = gradNorms
-        self.anchors = anchors
         self.variance = variance
         self.tolerance = tolerance
 
-    def addNoise(self, pose):
+    def addNoise(self, pose, anchors):
         """Add noise to distance measurements.
 
         Gaussian noise with a mean of 0 and a standard deviation determined by the specified variance is then added to
@@ -42,16 +39,18 @@ class NLS:
 
         Args:
             pose (numpy.ndarray[float]): The current pose of the robot
+            anchors (list[tuple[float]]): Locations of each anchor (either 2D or 3D).
+
 
         Returns:
             (numpy.ndarray[float]): Noisy distance measurements from the robot to each anchor.
         """
         x, y = pose
-        distances = np.sqrt((self.anchors[:, 0] - x)**2 + (self.anchors[:, 1] - y)**2)
+        distances = np.sqrt((anchors[:, 0] - x)**2 + (anchors[:, 1] - y)**2)
         noisy_distances = distances + np.random.normal(0, np.sqrt(self.variance), len(distances))
         return noisy_distances
 
-    def eq(self, est_pose):
+    def eq(self, est_pose, anchors):
         """ 
         Calculates the Euclidean distances from anchor points to given pose.
 
@@ -59,16 +58,17 @@ class NLS:
 
         Args:
             est_pose (numpy.ndarray[float]s): The pose estimate
+            anchors (list[tuple[float]]): Locations of each anchor (either 2D or 3D).
 
         Returns:
             (numpy.ndarray[float]):  Euclidean distances from the estimated pose to each anchor
         """
         est_x, est_y = est_pose
-        est_distances = np.sqrt((self.anchors[:, 0] - est_x)**2 + (self.anchors[:, 1] - est_y)**2)
+        est_distances = np.sqrt((anchors[:, 0] - est_x)**2 + (anchors[:, 1] - est_y)**2)
         return est_distances
 
     # Using Newtons method and autograd for gradient and hessian
-    def estimatePose(self, est_pose, measurements):
+    def estimatePose(self, est_pose, measurements, anchors):
         """Estimate the pose using Newtons method. 
 
         Given an initial estimated pose and distance measurements, the method iteratively updates the estimated
@@ -79,15 +79,16 @@ class NLS:
         Args:
             est_pose (numpy.ndarray[float]): The pose estimate
             measurements (numpy.ndarray[float]): The noisy measurments from the pose to anchors
+            anchors (list[tuple[float]]): Locations of each anchor (either 2D or 3D).
 
         Returns:
             (tuple[numpy.ndarray[float], float]): The updated estimated pose and the norm of the gradient.
         """
         est_x, est_y = est_pose
 
-        g = grad(lambda p: np.sum((self.eq(p) - measurements)**2))(est_pose)
-        h = hessian(lambda p: np.sum((self.eq(p) - measurements)**2))(est_pose)
-        
+        g = grad(lambda p, q: np.sum((self.eq(p, q) - measurements)**2))(est_pose, anchors)
+        h = hessian(lambda p, q: np.sum((self.eq(p, q) - measurements)**2))(est_pose, anchors)
+
         h_inv = np.linalg.pinv(h)
         delta_pose = np.dot(h_inv, g)
         
@@ -96,20 +97,21 @@ class NLS:
         
         return np.array([est_x, est_y]), np.linalg.norm(g)
 
-    def process(self, pose, guess):
+    def process(self, pose, guess, anchors):
         """Perform Newtons method to refine an intial guess for the pose based on distance measurements until a tolerance is met.
 
         Args:
             pose (numpy.ndarray[float]): The actual pose
             guess (numpy.ndarray[float]): The intial guess for a given poses. A randomly determined point on the map.
+            anchors (list[tuple[float]]): Locations of each anchor (either 2D or 3D).
         """
         p = []
         grads = []
         p.append(pose)
         p.append(guess)
         while True:
-            measurements = self.addNoise(pose)
-            guess, grad = self.estimatePose(guess, measurements)
+            measurements = self.addNoise(pose, anchors)
+            guess, grad = self.estimatePose(guess, measurements, anchors)
             p.append(guess)
             grads.append(grad)
             if grad <= self.tolerance:
