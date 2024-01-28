@@ -38,17 +38,16 @@ class Anchor:
         self.error = Error(error[0],error[1])
         self.clr = clr
 
-    def getDist(self, pose, anchor=None):
+    def getDist(self, pose):
         """Gets the euclidean distance between a pose and anchor.
 
         Args:
             pose (pandas.core.series.Series): The pose
-            anchor (tuple[float], optional): In case a different anchor location needs to be used. Defaults to None.
 
         Returns:
             (float): The euclidean distance between the pose and anchor
         """
-        return np.linalg.norm(pose-anchor if anchor else pose-self.location)
+        return np.linalg.norm(pose-self.location)
         
 class Robot:
     """Component module to model robot behaviour in a simulation environment (currently not used)

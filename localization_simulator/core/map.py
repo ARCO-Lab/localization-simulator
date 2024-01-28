@@ -17,7 +17,7 @@ import pandas as pd
 import random
 
 from .plot import Plot
-from .inf import isotropic, newAnchorPos
+from .inf import isotropic, shiftedPos
 from .component import Anchor
 from ..utils.trajectory import Traj2D, Traj3D
 from ..utils.nls import NLS
@@ -59,7 +59,7 @@ class Map:
             anchorList (list[Anchor]): The list of anchors to place in a map.
         """
         self.anchors = anchorList
-        self.isotropic = isotropic(self.nDim,random.uniform(1,2))
+        self.isotropic = isotropic(self.nDim,random.uniform(0,0.5))
         if self.nDim == 2:
             for a in anchorList:
                 self.ax.add_patch(Rectangle(a.location,0.5,0.5,fc="black",ec=a.clr))
@@ -104,7 +104,7 @@ class Map:
     def visualize2D(self):
         """Visualizes the trajectory (2D) using Matplotlib animation
         """
-        nls = NLS(self.points,self.gradNorms,variance=0.01, tolerance=0.1)
+        nls = NLS(self.points,self.gradNorms,np.array([a.location for a in self.anchors]), variance=0.01, tolerance=0.1)
 
         def show(listBox, send, num):
             """Populate the treeview widget with values at each timestep
@@ -128,33 +128,31 @@ class Map:
             """
             data = self.trajectory.df.iloc[num:num+1]
             ln.set_data(data.x, data.y)
-
-            newAncs = []
-            for i in newAnchorPos([a.location for a in self.anchors], self.isotropic):
-                newAncs.append(i)
-            anc.set_data([i[0] for i in newAncs],[i[1] for i in newAncs])
+            priorPos = shiftedPos((data.x.item(),data.y.item()),self.isotropic)
+            ln_p.set_data(priorPos)
 
             if num % self.trajectory.interval == 0:
-                ln.set_color(np.random.rand(3,))
+                c = np.random.rand(3,)
+                ln.set_color(c)
+                ln_p.set_color(c)
             title.set_text('2D Test, pose={}'.format(num))
 
             guess = np.array([np.random.uniform(0, self.dim[0]), np.random.uniform(0, self.dim[1])])
-            nls.process(np.array([data.x.item(),data.y.item()]), guess, np.array(newAncs))
+            nls.process(priorPos, guess)
 
             send = []
-            for a, a_new in zip(self.anchors, newAncs):
-                print(f"{a.location} vs {a_new}")
-                dist = a.getDist(self.trajectory.df.iloc[num], tuple(a_new))
+            for a in self.anchors:
+                dist = a.getDist(priorPos)
                 send.append([a.name,dist,a.error.getPDF(dist)])
 
             show(listBox, send, num)
-            return ln,anc,title,
+            return ln,ln_p,title,
 
         title = self.ax.text(0.5,0.90, "", bbox={'facecolor':'w', 'alpha':0.5, 'pad':5},
                 transform=self.ax.transAxes, ha="center")
 
         ln, = self.ax.plot(self.trajectory.df.x, self.trajectory.df.y, 'ro')
-        anc, = self.ax.plot([],[], 'bx')
+        ln_p, = self.ax.plot([],[], 'rx')
 
         value_root, value_label, listBox = self.createWindow()
         
