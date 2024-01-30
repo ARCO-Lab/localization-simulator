@@ -16,7 +16,7 @@ from matplotlib.animation import FuncAnimation
 import pandas as pd
 import random
 
-from .plot import Plot
+from ..utils.plot import Plot
 from .inf import isotropic, shiftedPos
 from .component import Anchor
 from ..utils.trajectory import Traj2D, Traj3D

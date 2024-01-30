@@ -72,3 +72,4 @@ def postPlot(points, gradNorms):
         # input("Press a key ")
         plt.pause(2)
         plt.close()
+

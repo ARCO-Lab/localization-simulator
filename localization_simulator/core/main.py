@@ -6,7 +6,7 @@ Todo:
 """
 from .component import Anchor
 from .map import Map
-from .plot import Plot, postPlot
+from ..utils.plot import Plot, postPlot
 from ..utils.helper import parseArgs
 import numpy as np
 
