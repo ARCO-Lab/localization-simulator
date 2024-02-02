@@ -65,11 +65,11 @@ def fim(x, p, d, sol, isotropic, variance, hessian=False):
     """
     m = len(x)
     inf = np.repeat(np.linalg.inv(isotropic)[np.newaxis, :, :], m, axis=0)
-    # for _ in sol:
-    for i in range(m):
-        grad = outer_grad(x[i],p,d[i],sol)
-        grad = (1/(variance**4))*grad
-        inf[i] += grad
+    for _ in sol:
+        for i in range(m):
+            grad = outer_grad(x[i],p,d[i],sol)
+            grad = (1/(variance**4))*grad
+            inf[i] += grad
     
     return sum([log_det(inf[i]) for i in range(m)])
 

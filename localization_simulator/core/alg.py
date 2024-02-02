@@ -31,10 +31,17 @@ if __name__ == "__main__":
 
     x = np.array([(5,5),(7,7)])
     p = np.array([(8,5), (6,8), (6,14)])
-    d = np.array([[3.1,3.12,9.15],[2.12,1.5,7.17]]) 
     iso = isotropic(2,0.5)
+    variance = 1
 
-    print(greedy(2,x,p,d,iso,0.5))
+    def addNoise(x, p, variance):
+        d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
+        noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
+        return d + noise
+
+    d = addNoise(x,p,variance)
+
+    print(greedy(2,x,p,d,iso,variance))
 
 
 
