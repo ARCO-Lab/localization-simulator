@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.stats import norm
-from scipy.linalg import block_diag
+import pandas as pd
+from itertools import combinations
 
 def isotropic(dim, variance):
     return np.identity(dim) * variance
@@ -68,7 +69,7 @@ def fim(x, p, d, sol, isotropic, variance, hessian=False):
     for _ in sol:
         for i in range(m):
             grad = outer_grad(x[i],p,d[i],sol)
-            grad = (1/(variance**4))*grad
+            grad = (1/(variance**2))*grad
             inf[i] += grad
     
     return sum([log_det(inf[i]) for i in range(m)])
@@ -103,23 +104,38 @@ if __name__ == "__main__":
     # d = np.array([[1.41,2.31,3.45], [12.1,13.21,24.12], [16.1,15.13,19.4], [12,11.3,17.7]]) 
     # iso = isotropic(2,0.5)
 
-    x = np.array([(5,5),(7,7)])
-    p = np.array([(8,5), (6,8), (6,14)])
-    iso = isotropic(2,0.5)
+    x = np.array([(1, 1)])
+    p = np.array([(2, 1), (5, 1), (1, 5)])
+    iso = isotropic(2, 2)
     variance = 1
+    anc = [0,1,2]
 
     def addNoise(x, p, variance):
         d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
         noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
         return d + noise
 
+    def sanity(anc):
+        ancComb = [set(x) for i in range(len(anc) + 1) for x in combinations(anc, i)]
+        infTable = {str(comb): [] for comb in ancComb}
+        for _ in range(10):
+            d = addNoise(x,p,variance)
+            for s in ancComb:
+                i = fim(x,p,d,s,iso,variance)
+                infTable[str(s)].append(i)
 
-    sumInf = sum_i = {"{0, 1}": 0, "{0, 2}": 0, "{1, 2}": 0}
-    for iter in range(10):
-        d = addNoise(x,p,variance)
-        for s in [{0,1},{0,2},{1,2}]:
-            i = fim(x,p,d,s,iso,variance)
-            sumInf[str(s)] += i
-            print(f"Information for {s}, run {iter+1}: {i}")
-    print(sumInf)
+        df = pd.DataFrame(infTable)
+        df.index += 1
+        mean = df.mean()
+        quartiles = df.quantile([0.25,0.5,0.75])
+        summary = pd.DataFrame({
+            'Mean': mean,
+            '25th Percentile':quartiles.loc[0.25],
+            '50th Percentile':quartiles.loc[0.5],
+            '75th Percentile':quartiles.loc[0.75]
+        })
+        return df, summary
+
+    print(sanity(anc)[0])
+    print(sanity(anc)[1])
 
