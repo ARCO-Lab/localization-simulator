@@ -114,12 +114,12 @@ if __name__ == "__main__":
         return d + noise
 
 
-    for s in [{0,1},{0,2},{1,2}]:
-        result = 0
-        for _ in range(10):
-            d = addNoise(x,p,variance)
+    sumInf = sum_i = {"{0, 1}": 0, "{0, 2}": 0, "{1, 2}": 0}
+    for iter in range(10):
+        d = addNoise(x,p,variance)
+        for s in [{0,1},{0,2},{1,2}]:
             i = fim(x,p,d,s,iso,variance)
-            result += i
-        print(f"Average Information for {s}: {result/10}")
-
+            sumInf[str(s)] += i
+            print(f"Information for {s}, run {iter+1}: {i}")
+    print(sumInf)
 
