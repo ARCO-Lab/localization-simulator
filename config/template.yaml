@@ -1,0 +1,16 @@
+name:
+map:
+anchor:
+  - name:
+    location:
+    cutoff:
+    error: 
+    colour:
+pose: [[5,5],[7,7]]
+isotropic: 0.5
+sensor_measurement_variance: 1
+hessian: False
+
+
+# Notes
+# - Copy the 'name' block and place under 'anchors' for as many anchors as you'd like

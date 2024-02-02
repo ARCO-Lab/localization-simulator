@@ -8,35 +8,70 @@ def isotropic(dim, variance):
 def shiftedPos(pose, isotropic):
     return np.random.multivariate_normal(pose, isotropic)
 
-def gradient_range_localization(x, p, d):
-    """
-    Compute the Gradient for range-only localization based on A3 for Mechtron 3X03.
-    """
-    m = len(p)
-    gradient = np.zeros(np.shape(x))
+# def gradient_range_localization(x, p, d, j):
+#     """
+#     Compute the Gradient for range-only localization based on A3 for Mechtron 3X03.
+#     """
+#     print(f"P is: {p}")
+#     m = len(p)
+#     gradient = np.zeros(np.shape(x))
 
-    for i in range(m):
-        distance = np.linalg.norm(x-p[i])
-        gradient += ((distance-d[i])*((x-p[i])/distance))
-    
+#     # for i in range(m):
+#     #     distance = np.linalg.norm(x-p[i])
+#     #     print(f"distance is {distance}")
+#     #     gradient += ((distance-d[i])*((x-p[i])/distance))
+
+#     distance = np.linalg.norm(x-p[j])
+#     gradient += ((distance-d[j])*((x-p[j])/distance))
+#     return 2*gradient
+
+def outer_grad(x, p, d, sol):
+    """Compute the Gradient for range-only localization based on A3 for Mechtron 3X03.
+
+    Args:
+        x (numpy.ndarray[float]): x_i (a specific pose)
+        p (numpy.ndarray[tuple[float]]): All anchors positions
+        d (numpy.ndarray[float]): the distance measurements for x_i
+        sol (set{int}): The specific anchor numbers in the candidate set
+
+    Returns:
+        (numpy.ndarray[float]): The gradient
+    """
+    n = len(x)
+    gradient = np.zeros((n,n))
+
+    for j in sol:
+        distance = np.linalg.norm(x-p[j])
+        g = ((distance-d[j])*((x-p[j])/distance))
+        gradient += np.outer(g,g)
+        
     return 2*gradient
 
 
 def fim(x, p, d, sol, isotropic, variance, hessian=False):
-    m = len(x)
-    inf = np.zeros((m, m, *isotropic.shape))
-    for i in range(m):
-        inf[i, i] = np.linalg.inv(isotropic)
-    for j in sol:
-        for i in range(m):
-            grad = gradient_range_localization(x[i],p,d[i])
-            mean = np.linalg.norm(x[i]-p[j])
-            log_likelihood = norm.pdf(d[i][j],loc=mean,scale=np.sqrt(variance))
-            g_ij = grad*np.log(log_likelihood)
-            inf[i][i] += np.outer(g_ij,g_ij)
-    
-    return sum([log_det(inf[i][i]) for i in range(m)])
+    """_summary_
 
+    Args:
+        x (numpy.ndarray[float]): x (All poses)
+        p (numpy.ndarray[tuple[float]]): All anchors positions
+        d (numpy.ndarray[float]): the distance measurements for all x_i (all poses)
+        sol (set{int}): The specific anchor numbers in the candidate set
+        isotropic (bool): The isotropic covariance matrix
+        variance (float): The variance for measurements
+        hessian (bool, optional): Flag to use the hessian instead of the gradient. Defaults to False.
+
+    Returns:
+        (float): The log determinant of the information matrix
+    """
+    m = len(x)
+    inf = np.repeat(np.linalg.inv(isotropic)[np.newaxis, :, :], m, axis=0)
+    # for _ in sol:
+    for i in range(m):
+        grad = outer_grad(x[i],p,d[i],sol)
+        grad = (1/(variance**4))*grad
+        inf[i] += grad
+    
+    return sum([log_det(inf[i]) for i in range(m)])
 
 def hessian_range_localization(x, p, d):
     """
@@ -63,28 +98,28 @@ def log_det(m):
 if __name__ == "__main__":
     # isotropic_matrix = isotropic(2, 1)
 
-    x = np.array([(4,4), (5,5), (6,6), (7,7)])
-    p = np.array([(3,3), (14,14), (18,12)])
-    d = np.array([[1.41,2.31,3.45], [12.1,13.21,24.12], [16.1,15.13,19.4], [12,11.3,17.7]]) 
+    # x = np.array([(4,4), (5,5), (6,6), (7,7)])
+    # p = np.array([(3,3), (14,14), (18,12)])
+    # d = np.array([[1.41,2.31,3.45], [12.1,13.21,24.12], [16.1,15.13,19.4], [12,11.3,17.7]]) 
+    # iso = isotropic(2,0.5)
+
+    x = np.array([(5,5),(7,7)])
+    p = np.array([(8,5), (6,8), (6,14)])
     iso = isotropic(2,0.5)
+    variance = 1
 
-    # print(np.shape(x))
-    # print(np.shape(p))
-    # print(np.shape(d))
-
-    # print(gradient_range_localization(x[0],p,d[0]))
-
-    tt = fim(x,p,d,{1,2},iso,1)
-
-    print(tt)
-    # print(tt[0][0])
-
-    # print(np.outer(gradient_range_localization(x[0],p,d[0]),gradient_range_localization(x[0],p,d[0])))
+    def addNoise(x, p, variance):
+        d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
+        noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
+        return d + noise
 
 
-    # hessian = hessian_range_localization(x, p, d)
-    # print("Hessian Matrix:")
-    # print(hessian)
-    # print(np.shape(hessian))
-    # print(log_det(hessian))
+    for s in [{0,1},{0,2},{1,2}]:
+        result = 0
+        for _ in range(10):
+            d = addNoise(x,p,variance)
+            i = fim(x,p,d,s,iso,variance)
+            result += i
+        print(f"Average Information for {s}: {result/10}")
+
 

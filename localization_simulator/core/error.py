@@ -93,10 +93,11 @@ class Error:
 
 if __name__ == "__main__":
 
-    mean = 10
-    std_dev = 2
-    x = 12
+    # mean = 10
+    # std_dev = 2
+    # x = 12
 
-    new_pdf = Error.getPDF(x,mean,std_dev)
+    # new_pdf = Error.getPDF(x,mean,std_dev)
 
-    print("new PDF:", new_pdf)
+    # print("new PDF:", new_pdf)
+

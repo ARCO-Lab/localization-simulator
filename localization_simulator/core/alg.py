@@ -31,10 +31,10 @@ if __name__ == "__main__":
 
     x = np.array([(5,5),(7,7)])
     p = np.array([(8,5), (6,8), (6,14)])
-    d = np.array([[3.1,3.12,17.3],[2.12,1.5,15.3]]) 
-    iso = isotropic(2,0.1)
+    d = np.array([[3.1,3.12,9.15],[2.12,1.5,7.17]]) 
+    iso = isotropic(2,0.5)
 
-    print(greedy(2,x,p,d,iso,0.2))
+    print(greedy(2,x,p,d,iso,0.5))
 
 
 
