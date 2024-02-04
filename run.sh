@@ -1,1 +1,1 @@
-python -m localization_simulator.core.main --2
+python -m localization_simulator.core.main "$@"

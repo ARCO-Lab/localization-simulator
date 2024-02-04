@@ -45,16 +45,17 @@ def sampleRoutine3d():
     m.visualize3D()
 
 if __name__ == "__main__":
-    # # Used to parse arguments 
-    # use2d, use3d = parseArgs()
+    # Used to parse arguments 
+    use2d, use3d, config_file = parseArgs()
 
-    # if use2d == use3d:
-    #     np.random.choice([sampleRoutine2d,sampleRoutine3d])()
-    # elif use2d:
-    #     sampleRoutine2d()
-    # else:
-    #     sampleRoutine3d()
-
-    with open("config/test.yaml","r") as file:
-        y = yaml.safe_load(file)
-        customRoutine(y)
+    if config_file:
+        with open(f"config/{config_file}.yaml","r") as file:
+            y = yaml.safe_load(file)
+            customRoutine(y)
+    else:
+        if use2d == use3d:
+            np.random.choice([sampleRoutine2d,sampleRoutine3d])()
+        elif use2d:
+            sampleRoutine2d()
+        else:
+            sampleRoutine3d()

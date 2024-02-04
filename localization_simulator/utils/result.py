@@ -21,7 +21,6 @@ class Result():
         self.df.to_csv(f"{path}/{name}",index=False)
 
 
-
 if __name__ == "__main__":
     r = Result("Greedy","Evolutionary","Random")
     r.add("Greedy",[12,13,14])

@@ -47,7 +47,7 @@ class Anchor:
         Returns:
             (float): The euclidean distance between the pose and anchor
         """
-        return np.linalg.norm(pose-self.location)
+        return np.linalg.norm(pose-self.location) + np.random.normal(self.error.mean, np.sqrt(self.error.variance))
         
 class Robot:
     """Component module to model robot behaviour in a simulation environment (currently not used)
@@ -76,4 +76,5 @@ class Robot:
             raise ValueError("Pose Dimensionality is not consistent")
         
 if __name__ == "__main__":
-    pass
+    a = Anchor("a",(0,0,0),0,(0,1),"red")
+    print(a.getDist(np.array([(1,1,1)])))

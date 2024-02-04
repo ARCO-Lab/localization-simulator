@@ -75,9 +75,9 @@ class Error:
 
     Attributes:
         mean (float): The distribution mean
-        std_dev (float): The distribution standard deviation
+        std_dev (float): The distribution variance
     """
-    def __init__(self, mean, std_dev) -> None:
+    def __init__(self, mean, variance) -> None:
         """Init Method
 
         Args:
@@ -85,14 +85,14 @@ class Error:
             std_dev (float): The distance from the robot to the UWB sensor.
         """
         self.mean = mean
-        self.std_dev = std_dev
+        self.variance = variance
     
     def getPDF(self, dist, mean=None):
-        return stats.norm.pdf(dist, loc=self.mean if mean is None else mean, scale=self.std_dev)
+        return stats.norm.pdf(dist, loc=self.mean if mean is None else mean, scale=np.sqrt(self.variance))
 
 
 if __name__ == "__main__":
-
+    pass
     # mean = 10
     # std_dev = 2
     # x = 12

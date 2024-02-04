@@ -51,14 +51,19 @@ def greedy(k,x,p,d,iso,var):
 if __name__ == "__main__":
 
 
-    k = 4
+    # k = 4
 
-    p = np.column_stack((np.random.randint(0,100,30),np.random.randint(0,100,30)))
-    x = np.array([(1.5,1.5),(2,2.5),(2.5,1.5)])
-    # p = np.array([(1,1),(1,2),(1,3),(2,1),(2,2),(2,3),(3,1),(3,2),(3,3)])
-    iso = isotropic(2,2)
-    variance = 0.25
-    anc = [0,1,2,3,4,5,6,7,8]
+    # p = np.column_stack((np.random.randint(0,100,30),np.random.randint(0,100,30)))
+    # x = np.array([(1.5,1.5),(2,2.5),(2.5,1.5)])
+    # # p = np.array([(1,1),(1,2),(1,3),(2,1),(2,2),(2,3),(3,1),(3,2),(3,3)])
+    # iso = isotropic(2,2)
+    # variance = 0.25
+
+    k = 5
+    p = np.column_stack((np.random.randint(0,50,80),np.random.randint(0,50,80),np.random.randint(0,50,80)))
+    x = np.column_stack((np.random.randint(0,50,12),np.random.randint(0,50,12),np.random.randint(0,50,12)))
+    iso = isotropic(3,2)
+    variance = 1
 
     def addNoise(x, p, variance):
         d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
