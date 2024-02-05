@@ -34,6 +34,7 @@ class Traj2D:
             "y":[]
         }
         self.df = None
+        self.numpy = None
     
     def generateTraj(self):
         """Generates the trajectory based on the given poses and interval steps to added between them
@@ -41,9 +42,10 @@ class Traj2D:
         for cur in range(len(self.poses)-1):
             self.data["x"].extend(np.linspace(self.poses[cur][0], self.poses[cur+1][0], self.interval))
             self.data["y"].extend(np.linspace(self.poses[cur][1], self.poses[cur+1][1], self.interval))
-        self.data["x"].append(self.poses[-1][0])
-        self.data["y"].append(self.poses[-1][1])
+        # self.data["x"].append(self.poses[-1][0])
+        # self.data["y"].append(self.poses[-1][1])
         self.df = pd.DataFrame(self.data)
+        self.numpy = self.df[['x', 'y']].to_numpy()
 
     def visualizeTraj(self):
         """Visualizes the trajectory using Matplotlib animation

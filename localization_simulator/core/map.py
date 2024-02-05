@@ -24,6 +24,7 @@ from ..utils.nls import NLS
 from .error import Error
 import tkinter as tk
 from tkinter import ttk
+from .alg import brute, greedy
 
 class Map:
     """Module for creating simulation maps.
@@ -51,6 +52,14 @@ class Map:
         self.points = []
         self.gradNorms = []
         self.isotropic = None
+        self.k = None
+        self.variance = None
+    
+    def setK(self, k):
+        self.k = k
+    
+    def setVariance(self, variance):
+        self.variance = variance
     
     def placeAnchor(self, anchorList):
         """Method for placing anchors in a map.
@@ -100,6 +109,21 @@ class Map:
         listBox.grid(row=1, column=0, columnspan=2)
 
         return root, value_label, listBox
+
+    def addNoise(self):
+        d = np.array([[np.linalg.norm(i - j) for j in np.array([p.location for p in self.anchors])] for i in self.trajectory.numpy])
+        noise = np.random.normal(0, np.sqrt(self.variance), size=np.shape(d))
+        return d + noise
+
+    def headless(self):
+        """ Performs the simulation without any visualization
+        """
+        # nls = NLS(self.points,self.gradNorms,np.array([a.location for a in self.anchors]), variance=0.01, tolerance=0.1)
+
+        d = self.addNoise()  
+
+        print(brute(self.k,self.trajectory.numpy,np.array([a.location for a in self.anchors]),d, self.isotropic, self.variance))
+        print(greedy(self.k,self.trajectory.numpy,np.array([a.location for a in self.anchors]),d, self.isotropic, self.variance))
 
     def visualize2D(self):
         """Visualizes the trajectory (2D) using Matplotlib animation

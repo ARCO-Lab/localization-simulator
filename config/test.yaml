@@ -1,5 +1,6 @@
 name: "Test"
 map: [20,20]
+k: 2
 anchor:
   - name: "a"
     location: [8,5]
@@ -17,5 +18,6 @@ anchor:
     error: [0,3]
     colour: "red"
 pose: [[5,5],[7,7]]
-isotropic: 0.5
+isotropic: 1
+sensor_measurement_variance: 1
 hessian: False

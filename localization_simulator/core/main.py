@@ -6,13 +6,16 @@ Todo:
 """
 from .component import Anchor
 from .map import Map
+from .alg import *
 from ..utils.plot import Plot, postPlot
 from ..utils.helper import parseArgs
 import numpy as np
 import yaml
 import os
 
-def customRoutine(config):
+
+
+def customRoutine(config, headless=False):
     """A custom routine as provided by a config yaml file
 
     Args:
@@ -20,10 +23,15 @@ def customRoutine(config):
     """
     anchorList = [Anchor(i["name"],i["location"],i["cutoff"],i["error"],i["colour"]) for i in config["anchor"]]
     m = Map(config["map"])
+    m.setK(config["k"])
+    m.setVariance(config["sensor_measurement_variance"])
     m.placeAnchor(anchorList)
     m.loadTraj(config["pose"],6)
-    m.visualize2D() if m.nDim == 2 else m.visualize3D()
-    postPlot(m.points, m.gradNorms)
+    if headless:
+        m.headless()
+    else:
+        m.visualize2D() if m.nDim == 2 else m.visualize3D()
+        postPlot(m.points, m.gradNorms)
 
 def sampleRoutine2d():
     """A sample routine for a 2D simulation
@@ -46,12 +54,12 @@ def sampleRoutine3d():
 
 if __name__ == "__main__":
     # Used to parse arguments 
-    use2d, use3d, config_file = parseArgs()
+    use2d, use3d, config_file, headless, save = parseArgs()
 
     if config_file:
         with open(f"config/{config_file}.yaml","r") as file:
             y = yaml.safe_load(file)
-            customRoutine(y)
+            customRoutine(y,headless)
     else:
         if use2d == use3d:
             np.random.choice([sampleRoutine2d,sampleRoutine3d])()

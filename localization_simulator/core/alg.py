@@ -8,7 +8,7 @@ def brute(k,x,p,d,iso,var):
     start = perf_counter()
     candidates = list(combinations(range(len(p)),k))
 
-    inf_max = 0
+    inf_max = float('-inf')
     solution = set()
 
     for c in candidates:
@@ -29,12 +29,12 @@ def greedy(k,x,p,d,iso,var):
     solution = set()
 
     for _ in range(k):
-        inf_max = 0
+        inf_max = float('-inf')
         j_best = None
         
         for j in range(len(p)):
             inf_j = fim(x,p,d,solution.union({j}),iso,var)
-            print(f"Set:{solution.union({j})} and inf_j:{inf_j} ")
+            # print(f"Set:{solution.union({j})} and inf_j:{inf_j} ")
 
             if inf_j > inf_max:
                 inf_max = inf_j
@@ -52,16 +52,15 @@ if __name__ == "__main__":
 
 
     # k = 4
-
-    # p = np.column_stack((np.random.randint(0,100,30),np.random.randint(0,100,30)))
-    # x = np.array([(1.5,1.5),(2,2.5),(2.5,1.5)])
+    # p = np.column_stack((np.random.randint(0,100,30),np.random.randint(0,100,30),np.random.randint(0,100,30)))
+    # x = np.array([(1.5,1.5,1.5),(2,2.5,2.5),(2.5,1.5,1.5)])
     # # p = np.array([(1,1),(1,2),(1,3),(2,1),(2,2),(2,3),(3,1),(3,2),(3,3)])
-    # iso = isotropic(2,2)
+    # iso = isotropic(3,2)
     # variance = 0.25
 
-    k = 5
-    p = np.column_stack((np.random.randint(0,50,80),np.random.randint(0,50,80),np.random.randint(0,50,80)))
-    x = np.column_stack((np.random.randint(0,50,12),np.random.randint(0,50,12),np.random.randint(0,50,12)))
+    k = 3
+    p = np.column_stack((np.random.randint(0,50,4),np.random.randint(0,50,4),np.random.randint(0,50,4)))
+    x = np.array([(1.5,1.5,1.5),(2,2.5,2.5),(2.5,1.5,1.5)])
     iso = isotropic(3,2)
     variance = 1
 
@@ -70,9 +69,11 @@ if __name__ == "__main__":
         noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
         return d + noise
 
+    
     d = addNoise(x,p,variance)
 
-    print(brute(k,x,p,d,iso,variance))
+
+    # print(brute(k,x,p,d,iso,variance))
     print(greedy(k,x,p,d,iso,variance))
 
 
