@@ -3,6 +3,7 @@ from .inf import fim, isotropic
 import numpy as np
 import pandas as pd
 from itertools import combinations
+import cma
 
 def brute(k,x,p,d,iso,var):
     start = perf_counter()
@@ -20,8 +21,8 @@ def brute(k,x,p,d,iso,var):
             solution = c
     
     stop = perf_counter()
-    print(stop-start)
-    print(inf_max)
+    print("time: " + str(stop-start))
+    print("max inf gain: " + str(inf_max))
     return solution
 
 def greedy(k,x,p,d,iso,var):
@@ -43,16 +44,41 @@ def greedy(k,x,p,d,iso,var):
         solution = solution.union({j_best})
 
     stop = perf_counter()
-    print(stop-start)
-    print(inf_max)
+    print("time: " + str(stop-start))
+    print("max inf gain: " + str(inf_max))
     return solution
 
+def cma_es(k, x, p, d, iso, var, pop_size=30, max_generations=100):
+    start = perf_counter()
+    inf_max = float('-inf') 
+
+    def obj_function(candidates):
+        nonlocal inf_max
+        selected_indices = np.argsort(-candidates)[:k]
+        inf_gain = fim(x, p, d, selected_indices, iso, var)
+
+        if inf_gain > inf_max:
+            inf_max = inf_gain
+        return -inf_gain
+    
+    seed = 0.5 * np.ones(len(p))
+    sigma = 0.3
+
+    params = {'maxiter': max_generations, 'popsize': pop_size}
+    es = cma.CMAEvolutionStrategy(seed, sigma, params)
+    es.optimize(obj_function)
+
+    continuous_sol = es.result.xbest
+    solution = np.argsort(-continuous_sol)[:k]
+    stop = perf_counter()
+    print("time: " + str(stop-start))
+    print("max inf gain: " + str(inf_max))
+    return solution
 
 if __name__ == "__main__":
 
 
     # k = 4
-
     # p = np.column_stack((np.random.randint(0,100,30),np.random.randint(0,100,30)))
     # x = np.array([(1.5,1.5),(2,2.5),(2.5,1.5)])
     # # p = np.array([(1,1),(1,2),(1,3),(2,1),(2,2),(2,3),(3,1),(3,2),(3,3)])
@@ -74,8 +100,7 @@ if __name__ == "__main__":
 
     print(brute(k,x,p,d,iso,variance))
     print(greedy(k,x,p,d,iso,variance))
-
-
+    print(cma_es(k,x,p,d,iso,variance))
 
     # def sanity(anc):
     #     ancComb = [set(x) for i in range(len(anc) + 1) for x in combinations(anc, i)]
@@ -102,7 +127,3 @@ if __name__ == "__main__":
     # print(sanity(anc)[1])
 
     # print(greedy(2,x,p,d,iso,variance))
-
-
-
-
