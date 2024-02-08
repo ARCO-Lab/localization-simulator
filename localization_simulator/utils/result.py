@@ -28,7 +28,7 @@ class Parameters():
         plt.scatter(self.p[:,0],self.p[:,1],color="r",marker = "x",s=10)
         plt.plot(self.x[:,0], self.x[:,1],'--cD',markersize=3)
         for i in self.x:
-            plt.gca().add_patch(Circle((i[0], i[1]), self.sensor_var, color='c', fill=False))
+            plt.gca().add_patch(Circle((i[0], i[1]), self.iso_var[0][0], color='c', fill=False))
         plt.gca().set_aspect('equal')    
         return plt
     
@@ -135,8 +135,8 @@ if __name__ == "__main__":
     # r.toLatex("test")
 
     dim = (1059,641)
-    k = 10
-    p = np.column_stack((np.random.randint(10,1050,600),np.random.randint(0,610,600)))
+    k = 2
+    p = np.column_stack((np.random.randint(10,1050,30),np.random.randint(0,610,30)))
     # x = np.column_stack((np.random.randint(0,1059,10),np.random.randint(0,641,10)))
     x = np.array([(1030,0),(1030,150),(970,160),(960,220),(850,230),
                   (880,390),(840,520),(1030,510),(1030,600),(710,600),
@@ -145,14 +145,15 @@ if __name__ == "__main__":
                   (290,593),(154,565),(137,425),(110,420),(82,225),
                   (108,197),(105,178),(130,178),(140,106),(81,0)
                   ])
-    iso = isotropic(2,2)
-    variance = 10
+    iso = isotropic(2,6)
+    variance = 4
     
     d = addNoise(x,p,variance)
 
     param = Parameters(dim,k,x,p,d,iso,variance)
+    param2, param3 = copy.deepcopy(param), copy.deepcopy(param)
     param.writeTxt("2dcase - all 3")
-    yb,yg,yc = param.visualize("assets/factorylayout1.jpg"),param.visualize("assets/factorylayout1.jpg"),param.visualize("assets/factorylayout1.jpg")
+    yb,yg,yc = param.visualize("assets/factorylayout1.jpg"),param2.visualize("assets/factorylayout2.jpg"),param3.visualize("assets/factorylayout3.jpg")
 
 
     bset = brute(param)
@@ -167,18 +168,25 @@ if __name__ == "__main__":
     for i in bsetList:
         yb.gca().add_patch(yb.Circle((i),radius=10,color="m",fill=True))
     yb.scatter(bsetList[:,0],bsetList[:,1],color="r",marker = "x",s=10)
-    yb.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_brute.png")
+    yb.scatter(100,100,color="green",marker="x",s=50)
+    
 
     # greedy
     for i in gsetList:
         yg.gca().add_patch(yg.Circle((i),radius=10,color="y",fill=True))
     yg.scatter(gsetList[:,0],gsetList[:,1],color="r",marker = "x",s=10)
-    yg.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_greedy.png")
+    yg.scatter(200,200,color="green",marker="x",s=50)
+    
 
     # cma
     for i in csetList:
-        yc.gca().add_patch(yc.Circle((i),radius=10,color="orange",fill=True))
+        yc.gca().add_patch(yc.Circle((i),radius=10,color="dodgerblue",fill=True))
     yc.scatter(csetList[:,0],csetList[:,1],color="r",marker = "x",s=10)
+    yc.scatter(300,300,color="green",marker="x",s=50)
+    
+
+    yb.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_brute.png")
+    yg.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_greedy.png")
     yc.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_cmaes.png")
     
 
