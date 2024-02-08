@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from ..core.inf import isotropic, addNoise
 from ..core.alg import greedy,brute,cma_es
+import copy
 
 class Parameters():
     def __init__(self,dim,k,x,p,d,iso_var,sensor_var,pop_size=100,max_generations=100,sigma=0.3) -> None:
@@ -22,7 +23,6 @@ class Parameters():
     
     def visualize(self, img=None):
         if img:
-            print("YAYA")
             i = plt.imread(img)
             plt.imshow(i)
         plt.scatter(self.p[:,0],self.p[:,1],color="r",marker = "x",s=10)
@@ -44,8 +44,10 @@ class Parameters():
         name = f"{name}.txt" if name else f"{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}.txt"
         with open(f"{path}/{name}", 'w') as f:
             f.write(f"dim: {self.dim}\n")
+            f.write(f"# of poses: {len(self.x)}\n")
+            f.write(f"# of anchors: {len(p)}\n")
             f.write(f"k: {self.k}\n")
-            f.write(f"iso_var: {self.iso_var}\n")
+            f.write(f"iso_var: {self.iso_var[0][0]}\n")
             f.write(f"sensor_var: {self.sensor_var}\n")
             f.write(f"pop_size: {self.pop_size}\n")
             f.write(f"max_generations: {self.max_generations}\n")
@@ -149,17 +151,34 @@ if __name__ == "__main__":
     d = addNoise(x,p,variance)
 
     param = Parameters(dim,k,x,p,d,iso,variance)
-    # param.writeTxt()
-    y = param.visualize("assets/factorylayout1.jpg")
+    param.writeTxt("2dcase - all 3")
+    yb,yg,yc = param.visualize("assets/factorylayout1.jpg"),param.visualize("assets/factorylayout1.jpg"),param.visualize("assets/factorylayout1.jpg")
 
-    gset = (greedy(param))
-    # cset = (cma_es(param))
 
+    bset = brute(param)
+    gset = greedy(param)
+    cset = cma_es(param)
+
+    bsetList = np.array([(p[i][0],p[i][1]) for i in bset])
     gsetList = np.array([(p[i][0],p[i][1]) for i in gset])
+    csetList = np.array([(p[i][0],p[i][1]) for i in cset])
+
+    # brute
+    for i in bsetList:
+        yb.gca().add_patch(yb.Circle((i),radius=10,color="m",fill=True))
+    yb.scatter(bsetList[:,0],bsetList[:,1],color="r",marker = "x",s=10)
+    yb.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_brute.png")
+
+    # greedy
     for i in gsetList:
-        y.gca().add_patch(y.Circle((i),radius=10,color="y",fill=True))
-    y.scatter(gsetList[:,0],gsetList[:,1],color="r",marker = "x",s=10)
-    y.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}.png")
-    y.show()
+        yg.gca().add_patch(yg.Circle((i),radius=10,color="y",fill=True))
+    yg.scatter(gsetList[:,0],gsetList[:,1],color="r",marker = "x",s=10)
+    yg.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_greedy.png")
+
+    # cma
+    for i in csetList:
+        yc.gca().add_patch(yc.Circle((i),radius=10,color="orange",fill=True))
+    yc.scatter(csetList[:,0],csetList[:,1],color="r",marker = "x",s=10)
+    yc.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_cmaes.png")
     
 
