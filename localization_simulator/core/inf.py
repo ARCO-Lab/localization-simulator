@@ -9,6 +9,11 @@ def isotropic(dim, variance):
 def shiftedPos(pose, isotropic):
     return np.random.multivariate_normal(pose, isotropic)
 
+def addNoise(x, p, variance):
+    d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
+    noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
+    return d + noise
+
 
 def outer_grad(x, p, d, sol):
     """Compute the Gradient for range-only localization based on A3 for Mechtron 3X03.
@@ -27,6 +32,8 @@ def outer_grad(x, p, d, sol):
 
     for j in sol:
         distance = np.linalg.norm(x-p[j])
+        if distance == 0:
+            print(f"x:{x} \t p[j]:{p[j]} \t distance:{distance}")
         g = ((distance-d[j])*((x-p[j])/distance))
         gradient += np.outer(g,g)
         

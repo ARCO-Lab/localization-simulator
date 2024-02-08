@@ -118,12 +118,13 @@ class Map:
     def headless(self):
         """ Performs the simulation without any visualization
         """
+        anchorLocations = np.array([a.location for a in self.anchors])
         # nls = NLS(self.points,self.gradNorms,np.array([a.location for a in self.anchors]), variance=0.01, tolerance=0.1)
 
         d = self.addNoise()  
 
-        print(brute(self.k,self.trajectory.numpy,np.array([a.location for a in self.anchors]),d, self.isotropic, self.variance))
-        print(greedy(self.k,self.trajectory.numpy,np.array([a.location for a in self.anchors]),d, self.isotropic, self.variance))
+        print(brute(self.k,self.trajectory.numpy, anchorLocations,d, self.isotropic, self.variance))
+        print(greedy(self.k,self.trajectory.numpy, anchorLocations,d, self.isotropic, self.variance))
 
     def visualize2D(self):
         """Visualizes the trajectory (2D) using Matplotlib animation

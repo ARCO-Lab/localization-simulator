@@ -1,4 +1,4 @@
-Information,MSE,Run Time
-12,13,14
-,,
-,,
+Algorithm,Information,RMSE,Run Time
+,,,
+Greedy,12,13,14
+,,,

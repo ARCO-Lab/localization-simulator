@@ -1,19 +1,20 @@
 from time import perf_counter
 from .inf import fim, isotropic
+# from ..utils.result import Parameters
 import numpy as np
 import pandas as pd
 from itertools import combinations
 import cma
 
-def brute(k,x,p,d,iso,var):
+def brute(param):
     start = perf_counter()
-    candidates = list(combinations(range(len(p)),k))
+    candidates = list(combinations(range(len(param.p)),param.k))
 
     inf_max = float('-inf')
     solution = set()
 
     for c in candidates:
-        inf_j = fim(x,p,d,c,iso,var)
+        inf_j = fim(param.x,param.p,param.d,c,param.iso_var,param.sensor_var)
         # print(f"Set:{c} and inf_j:{inf_j} ")
 
         if inf_j > inf_max:
@@ -25,16 +26,16 @@ def brute(k,x,p,d,iso,var):
     print("max inf gain: " + str(inf_max))
     return solution
 
-def greedy(k,x,p,d,iso,var):
+def greedy(param):
     start = perf_counter()
     solution = set()
 
-    for _ in range(k):
+    for _ in range(param.k):
         inf_max = float('-inf')
         j_best = None
         
-        for j in range(len(p)):
-            inf_j = fim(x,p,d,solution.union({j}),iso,var)
+        for j in range(len(param.p)):
+            inf_j = fim(param.x,param.p,param.d,solution.union({j}),param.iso_var,param.sensor_var)
             # print(f"Set:{solution.union({j})} and inf_j:{inf_j} ")
 
             if inf_j > inf_max:
@@ -48,28 +49,28 @@ def greedy(k,x,p,d,iso,var):
     print("max inf gain: " + str(inf_max))
     return solution
 
-def cma_es(k, x, p, d, iso, var, pop_size=30, max_generations=100):
+def cma_es(param):
     start = perf_counter()
     inf_max = float('-inf') 
 
     def obj_function(candidates):
         nonlocal inf_max
-        selected_indices = np.argsort(-candidates)[:k]
-        inf_gain = fim(x, p, d, selected_indices, iso, var)
+        selected_indices = np.argsort(-candidates)[:param.k]
+        inf_gain = fim(param.x, param.p, param.d, selected_indices, param.iso_var, param.sensor_var)
 
         if inf_gain > inf_max:
             inf_max = inf_gain
         return -inf_gain
     
-    seed = 0.5 * np.ones(len(p))
+    seed = 0.5 * np.ones(len(param.p))
     sigma = 0.3
 
-    params = {'maxiter': max_generations, 'popsize': pop_size}
+    params = {'maxiter': param.max_generations, 'popsize': param.pop_size}
     es = cma.CMAEvolutionStrategy(seed, sigma, params)
     es.optimize(obj_function)
 
     continuous_sol = es.result.xbest
-    solution = np.argsort(-continuous_sol)[:k]
+    solution = np.argsort(-continuous_sol)[:param.k]
     stop = perf_counter()
     print("time: " + str(stop-start))
     print("max inf gain: " + str(inf_max))
@@ -86,23 +87,22 @@ if __name__ == "__main__":
     # variance = 0.25
 
     k = 3
-    p = np.column_stack((np.random.randint(0,50,4),np.random.randint(0,50,4),np.random.randint(0,50,4)))
-    x = np.array([(1.5,1.5,1.5),(2,2.5,2.5),(2.5,1.5,1.5)])
-    iso = isotropic(3,2)
+    p = np.column_stack((np.random.randint(0,50,10),np.random.randint(0,50,10)))
+    x = np.column_stack((np.random.randint(0,50,2),np.random.randint(0,50,2)))
+    iso = isotropic(2,2)
     variance = 1
 
     def addNoise(x, p, variance):
         d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
         noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
         return d + noise
-
     
     d = addNoise(x,p,variance)
 
-
+    param = Parameters((50,50),k,x,p,d,iso,variance)
     # print(brute(k,x,p,d,iso,variance))
-    print(greedy(k,x,p,d,iso,variance))
-    print(cma_es(k,x,p,d,iso,variance))
+    print(greedy(param))
+    print(cma_es(param))
 
     # def sanity(anc):
     #     ancComb = [set(x) for i in range(len(anc) + 1) for x in combinations(anc, i)]

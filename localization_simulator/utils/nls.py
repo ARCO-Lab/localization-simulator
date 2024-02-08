@@ -18,7 +18,7 @@ class NLS:
         variance (float): The variance to be used for adding noise to measurements.
         tolerance (float): the maximum error before Newtons method stops iterating.
     """
-    def __init__(self,points,gradNorms,anchors,variance, tolerance) -> None:
+    def __init__(self,points,gradNorms,anchors,variance,tolerance) -> None:
         """Init method
 
         Args:
@@ -97,7 +97,7 @@ class NLS:
         
         return np.array([est_x, est_y]), np.linalg.norm(g)
 
-    def process(self, pose, guess):
+    def process(self, pose, guess, distances=None):
         """Perform Newtons method to refine an intial guess for the pose based on distance measurements until a tolerance is met.
 
         Args:
