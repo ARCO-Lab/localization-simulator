@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
     dim = (1059,641)
     k = 2
-    p = np.column_stack((np.random.randint(10,1050,30),np.random.randint(0,610,30)))
+    p = np.column_stack((np.random.randint(10,1050,5),np.random.randint(0,610,5)))
     # x = np.column_stack((np.random.randint(0,1059,10),np.random.randint(0,641,10)))
     x = np.array([(1030,0),(1030,150),(970,160),(960,220),(850,230),
                   (880,390),(840,520),(1030,510),(1030,600),(710,600),
@@ -146,47 +146,61 @@ if __name__ == "__main__":
                   (108,197),(105,178),(130,178),(140,106),(81,0)
                   ])
     iso = isotropic(2,6)
-    variance = 4
+    variance = 2
     
     d = addNoise(x,p,variance)
 
     param = Parameters(dim,k,x,p,d,iso,variance)
     param2, param3 = copy.deepcopy(param), copy.deepcopy(param)
+
     param.writeTxt("2dcase - all 3")
     yb,yg,yc = param.visualize("assets/factorylayout1.jpg"),param2.visualize("assets/factorylayout2.jpg"),param3.visualize("assets/factorylayout3.jpg")
 
-
     bset = brute(param)
-    gset = greedy(param)
-    cset = cma_es(param)
+    gset = greedy(param2)
+    cset = cma_es(param3)
 
     bsetList = np.array([(p[i][0],p[i][1]) for i in bset])
     gsetList = np.array([(p[i][0],p[i][1]) for i in gset])
     csetList = np.array([(p[i][0],p[i][1]) for i in cset])
 
     # brute
+    cir = []
     for i in bsetList:
-        yb.gca().add_patch(yb.Circle((i),radius=10,color="m",fill=True))
+        circle = yb.Circle((i),radius=10,color="m",fill=True)
+        yb.gca().add_patch(circle)
+        cir.append(circle)
     yb.scatter(bsetList[:,0],bsetList[:,1],color="r",marker = "x",s=10)
-    yb.scatter(100,100,color="green",marker="x",s=50)
+    yb.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_brute.png")
     
+    for c in cir:
+        c.remove()
 
     # greedy
+    cir = []
     for i in gsetList:
-        yg.gca().add_patch(yg.Circle((i),radius=10,color="y",fill=True))
+        circle = yg.Circle((i),radius=10,color="y",fill=True)
+        yg.gca().add_patch(circle)
+        cir.append(circle)
     yg.scatter(gsetList[:,0],gsetList[:,1],color="r",marker = "x",s=10)
-    yg.scatter(200,200,color="green",marker="x",s=50)
+    yg.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_greedy.png")
     
+    for c in cir:
+        c.remove()
 
     # cma
+    cir = []
     for i in csetList:
-        yc.gca().add_patch(yc.Circle((i),radius=10,color="dodgerblue",fill=True))
+        circle = yc.Circle((i),radius=10,color="dodgerblue",fill=True)
+        yc.gca().add_patch(circle)
+        cir.append(circle)
     yc.scatter(csetList[:,0],csetList[:,1],color="r",marker = "x",s=10)
-    yc.scatter(300,300,color="green",marker="x",s=50)
-    
-
-    yb.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_brute.png")
-    yg.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_greedy.png")
     yc.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_cmaes.png")
+    
+    for c in cir:
+        c.remove()
+    
+    
+    
     
 
