@@ -5,7 +5,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from ..core.inf import isotropic, addNoise
-from ..core.alg import greedy,brute,cma_es
+from ..core.alg import greedy,brute,cma_es, random_set
 import copy
 
 class Parameters():
@@ -101,7 +101,9 @@ class Result():
 
     def __init__(self, *args) -> None:
         self.algs = args
-        self.df = pd.DataFrame(index=self.algs ,columns=['Algorithm','Information', 'RMSE', 'Runtime'])
+        columns = ['Algorithm','Information', 'RMSE', 'Runtime']
+        subcolumns = pd.MultiIndex.from_product([columns, ['mean', 'std']])
+        self.df = pd.DataFrame(index=self.algs ,columns=subcolumns)
         self.time = f"{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}"
     
     def add(self,algName,result):
@@ -128,11 +130,13 @@ class Result():
 
 
 if __name__ == "__main__":
-    # r = Result("Brute-force","Greedy","CMA-ES")
-    # r.add("Greedy",[12,13,14])
-    # print(r.df)
+    r = Result("Random","Brute-force","Greedy","CMA-ES")
+    r.add("Greedy",[1,2,3,4,5,6,7])
+    print(r.df)
     # r.toCSV("test")
-    # r.toLatex("test")
+    r.toLatex("test3")
+
+
 
     dim = (1059,641)
     k = 2
@@ -151,54 +155,55 @@ if __name__ == "__main__":
     d = addNoise(x,p,variance)
 
     param = Parameters(dim,k,x,p,d,iso,variance)
-    param2, param3 = copy.deepcopy(param), copy.deepcopy(param)
+    print(random_set(param))
+    # param2, param3 = copy.deepcopy(param), copy.deepcopy(param)
 
-    param.writeTxt("2dcase - all 3")
-    yb,yg,yc = param.visualize("assets/factorylayout1.jpg"),param2.visualize("assets/factorylayout2.jpg"),param3.visualize("assets/factorylayout3.jpg")
+    # param.writeTxt("2dcase - all 3")
+    # yb,yg,yc = param.visualize("assets/factorylayout1.jpg"),param2.visualize("assets/factorylayout2.jpg"),param3.visualize("assets/factorylayout3.jpg")
 
-    bset = brute(param)
-    gset = greedy(param2)
-    cset = cma_es(param3)
+    # bset = brute(param)
+    # gset = greedy(param2)
+    # cset = cma_es(param3)
 
-    bsetList = np.array([(p[i][0],p[i][1]) for i in bset])
-    gsetList = np.array([(p[i][0],p[i][1]) for i in gset])
-    csetList = np.array([(p[i][0],p[i][1]) for i in cset])
+    # bsetList = np.array([(p[i][0],p[i][1]) for i in bset])
+    # gsetList = np.array([(p[i][0],p[i][1]) for i in gset])
+    # csetList = np.array([(p[i][0],p[i][1]) for i in cset])
 
-    # brute
-    cir = []
-    for i in bsetList:
-        circle = yb.Circle((i),radius=10,color="m",fill=True)
-        yb.gca().add_patch(circle)
-        cir.append(circle)
-    yb.scatter(bsetList[:,0],bsetList[:,1],color="r",marker = "x",s=10)
-    yb.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_brute.png")
+    # # brute
+    # cir = []
+    # for i in bsetList:
+    #     circle = yb.Circle((i),radius=10,color="m",fill=True)
+    #     yb.gca().add_patch(circle)
+    #     cir.append(circle)
+    # yb.scatter(bsetList[:,0],bsetList[:,1],color="r",marker = "x",s=10)
+    # yb.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_brute.png")
     
-    for c in cir:
-        c.remove()
+    # for c in cir:
+    #     c.remove()
 
-    # greedy
-    cir = []
-    for i in gsetList:
-        circle = yg.Circle((i),radius=10,color="y",fill=True)
-        yg.gca().add_patch(circle)
-        cir.append(circle)
-    yg.scatter(gsetList[:,0],gsetList[:,1],color="r",marker = "x",s=10)
-    yg.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_greedy.png")
+    # # greedy
+    # cir = []
+    # for i in gsetList:
+    #     circle = yg.Circle((i),radius=10,color="y",fill=True)
+    #     yg.gca().add_patch(circle)
+    #     cir.append(circle)
+    # yg.scatter(gsetList[:,0],gsetList[:,1],color="r",marker = "x",s=10)
+    # yg.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_greedy.png")
     
-    for c in cir:
-        c.remove()
+    # for c in cir:
+    #     c.remove()
 
-    # cma
-    cir = []
-    for i in csetList:
-        circle = yc.Circle((i),radius=10,color="dodgerblue",fill=True)
-        yc.gca().add_patch(circle)
-        cir.append(circle)
-    yc.scatter(csetList[:,0],csetList[:,1],color="r",marker = "x",s=10)
-    yc.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_cmaes.png")
+    # # cma
+    # cir = []
+    # for i in csetList:
+    #     circle = yc.Circle((i),radius=10,color="dodgerblue",fill=True)
+    #     yc.gca().add_patch(circle)
+    #     cir.append(circle)
+    # yc.scatter(csetList[:,0],csetList[:,1],color="r",marker = "x",s=10)
+    # yc.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_cmaes.png")
     
-    for c in cir:
-        c.remove()
+    # for c in cir:
+    #     c.remove()
     
     
     

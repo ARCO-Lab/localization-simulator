@@ -123,9 +123,13 @@ class NLS:
     def rmse(self, pose, guess, distances, ind, anchors, variance, isotropic):
         sum = 0
         self.anchors = anchors
+        print(f"Pose is {pose}\tguess is {guess}\tdistances is {distances}\tind is {ind}")
+        counter = 0
         while True:
             sum += np.linalg.norm(guess-pose)**2
             guess, grad = self.estimatePose(guess, distances[ind], pose, variance, isotropic)
+            print(f"Aprrox {counter}:{guess}")
+            counter += 1
             if grad <= self.tolerance:
                 break
         return sum

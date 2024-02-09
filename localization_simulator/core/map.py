@@ -24,7 +24,7 @@ from ..utils.nls import NLS
 from .error import Error
 import tkinter as tk
 from tkinter import ttk
-from .alg import brute, greedy, cma_es
+from .alg import brute, greedy, cma_es, random_set
 from ..utils.result import Parameters, Result
 
 class Map:
@@ -112,40 +112,62 @@ class Map:
 
         return root, value_label, listBox
 
-    def addNoise(self):
-        d = np.array([[np.linalg.norm(i - j) for j in np.array([p.location for p in self.anchors])] for i in self.trajectory.numpy])
-        noise = np.random.normal(0, np.sqrt(self.variance), size=np.shape(d))
+    @staticmethod
+    def addNoise(p,x,variance):
+        d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
+        noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
         return d + noise
 
     def headless(self):
         """ Performs the simulation without any visualization
         """
         res = Result("Brute-force","Greedy","CMA-ES")
+        runs = 10
         anchorLocations = np.array([a.location for a in self.anchors])
-        d = self.addNoise()  
 
-        nls = NLS(self.points,self.gradNorms,anchorLocations,variance=0.01,tolerance=0.1)
+        # anchorLocations =  np.column_stack((np.random.randint(10,1050,5),np.random.randint(0,610,5)))
+        d = self.addNoise(anchorLocations,self.poses,self.variance)  
 
-        param = Parameters(self.dim,self.k,self.trajectory.numpy,anchorLocations,d,self.isotropic,self.variance)
-        initial = self.poses + np.array([np.random.normal(0, self.isotropic[0][0]), np.random.normal(0, self.isotropic[0][0])])
+        nls = NLS(self.points,self.gradNorms,anchorLocations,variance=0.01,tolerance=1e-6)
+
+        param = Parameters(self.dim,self.k,self.poses,anchorLocations,d,self.isotropic,self.variance)
+        noise = np.random.normal(0, self.isotropic[0][0], (len(self.poses), 2))
+        initial = self.poses + noise
+
+        resRandom = random_set(param)
+        resRandom[0] = sorted(resRandom[0])
+        print(resRandom[0])
+        aRandom = np.array([anchorLocations[i] for i in resRandom[0]])
+        print(f"Inf gain: {resRandom[1]}")
+        print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resRandom[0]], i, aRandom, self.variance, self.isotropic) for i in range(len(resRandom[0]))]))}")
+        print("____________________________________________________________________________________________________________________________________________________________________")
 
         resBrute = brute(param)
+        resBrute[0] = sorted(resBrute[0])
         print(resBrute[0])
-        aBrut = np.array([anchorLocations[i] for i in resBrute[0]])
-        print(np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resBrute[0]], i, aBrut, self.variance, self.isotropic) for i in range(len(resBrute[0]))])))
+        aBrute = np.array([anchorLocations[i] for i in resBrute[0]])
+        print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resBrute[0]], i, aBrute, self.variance, self.isotropic) for i in range(len(resBrute[0]))]))}")
+        print("____________________________________________________________________________________________________________________________________________________________________")
 
 
         resGreedy = greedy(param)
         print(resGreedy[0])
+        resGreedy[0] = sorted(resGreedy[0])
         aGreedy = np.array([anchorLocations[i] for i in resGreedy[0]])
-        print(np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resGreedy[0]], i, aGreedy, self.variance, self.isotropic) for i in range(len(resGreedy[0]))])))
+        print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resGreedy[0]], i, aGreedy, self.variance, self.isotropic) for i in range(len(resGreedy[0]))]))}")
+        print("____________________________________________________________________________________________________________________________________________________________________")
 
 
         resCmaes = cma_es(param)
         resCmaes[0] = sorted(resCmaes[0])
         print(resCmaes[0])
         aCmaes = np.array([anchorLocations[i] for i in resCmaes[0]])
-        print(np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resCmaes[0]], i, aCmaes, self.variance, self.isotropic) for i in range(len(resCmaes[0]))])))
+        print([[d[i][j] for j in resCmaes[0]] for i in range(len(resCmaes[0]))])
+        print(aCmaes)
+        print(d)
+        print([[d[i][j] for j in resCmaes[0]] for i in range(len(resCmaes[0]))])
+        print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resCmaes[0]], i, aCmaes, self.variance, self.isotropic) for i in range(len(resCmaes[0]))]))}")
+        print("____________________________________________________________________________________________________________________________________________________________________")
 
 
 

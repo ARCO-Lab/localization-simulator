@@ -5,6 +5,16 @@ import numpy as np
 import pandas as pd
 from itertools import combinations
 import cma
+import random
+
+def random_set(param):
+    start = perf_counter()
+    solution = set()
+    while len(solution) < param.k:
+        solution.add(random.randint(0,len(param.p)-1))
+    inf = fim(param.x,param.p,param.d,solution,param.iso_var,param.sensor_var)
+    stop = perf_counter()
+    return [solution,inf,0,stop-start]
 
 def brute(param):
     start = perf_counter()
@@ -78,7 +88,7 @@ def cma_es(param):
 
 if __name__ == "__main__":
 
-
+    pass
     # k = 4
     # p = np.column_stack((np.random.randint(0,100,30),np.random.randint(0,100,30),np.random.randint(0,100,30)))
     # x = np.array([(1.5,1.5,1.5),(2,2.5,2.5),(2.5,1.5,1.5)])
@@ -86,23 +96,23 @@ if __name__ == "__main__":
     # iso = isotropic(3,2)
     # variance = 0.25
 
-    k = 3
-    p = np.column_stack((np.random.randint(0,50,10),np.random.randint(0,50,10)))
-    x = np.column_stack((np.random.randint(0,50,2),np.random.randint(0,50,2)))
-    iso = isotropic(2,2)
-    variance = 1
+    # k = 3
+    # p = np.column_stack((np.random.randint(0,50,10),np.random.randint(0,50,10)))
+    # x = np.column_stack((np.random.randint(0,50,2),np.random.randint(0,50,2)))
+    # iso = isotropic(2,2)
+    # variance = 1
 
-    def addNoise(x, p, variance):
-        d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
-        noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
-        return d + noise
+    # def addNoise(x, p, variance):
+    #     d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
+    #     noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
+    #     return d + noise
     
-    d = addNoise(x,p,variance)
+    # d = addNoise(x,p,variance)
 
-    param = Parameters((50,50),k,x,p,d,iso,variance)
-    # print(brute(k,x,p,d,iso,variance))
-    print(greedy(param))
-    print(cma_es(param))
+    # param = Parameters((50,50),k,x,p,d,iso,variance)
+    # # print(brute(k,x,p,d,iso,variance))
+    # print(greedy(param))
+    # print(cma_es(param))
 
     # def sanity(anc):
     #     ancComb = [set(x) for i in range(len(anc) + 1) for x in combinations(anc, i)]
