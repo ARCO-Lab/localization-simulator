@@ -18,7 +18,7 @@ class NLS:
         variance (float): The variance to be used for adding noise to measurements.
         tolerance (float): the maximum error before Newtons method stops iterating.
     """
-    def __init__(self,points,gradNorms,anchors,variance,tolerance) -> None:
+    def __init__(self,points,gradNorms,anchors,tolerance, distances = None,variance= None) -> None:
         """Init method
 
         Args:
@@ -31,6 +31,7 @@ class NLS:
         self.points = points
         self.gradNorms = gradNorms
         self.anchors = anchors
+        self.distances = distances
         self.variance = variance
         self.tolerance = tolerance
 
@@ -69,7 +70,7 @@ class NLS:
         return est_distances
 
     # Using Newtons method and autograd for gradient and hessian
-    def estimatePose(self, est_pose, measurements):
+    def estimatePose(self, est_pose, measurements, pose, variance, isotropic):
         """Estimate the pose using Newtons method. 
 
         Given an initial estimated pose and distance measurements, the method iteratively updates the estimated
@@ -86,8 +87,9 @@ class NLS:
         """
         est_x, est_y = est_pose
 
-        g = grad(lambda p: np.sum((self.eq(p) - measurements)**2))(est_pose)
-        h = hessian(lambda p: np.sum((self.eq(p) - measurements)**2))(est_pose)
+        
+        g = grad(lambda p: (np.dot(np.transpose(pose-p),np.linalg.inv(isotropic))@(pose-p)) + np.sum((1/(variance))*(self.eq(p) - measurements)**2))(est_pose)
+        h = hessian(lambda p: (np.dot(np.transpose(pose-p),np.linalg.inv(isotropic))@(pose-p)) + np.sum((1/(variance))*(self.eq(p) - measurements)**2))(est_pose)
 
         h_inv = np.linalg.pinv(h)
         delta_pose = np.dot(h_inv, g)
@@ -117,6 +119,16 @@ class NLS:
                 break
         self.points.append(p)
         self.gradNorms.append(grads)
+    
+    def rmse(self, pose, guess, distances, ind, anchors, variance, isotropic):
+        sum = 0
+        self.anchors = anchors
+        while True:
+            sum += np.linalg.norm(guess-pose)**2
+            guess, grad = self.estimatePose(guess, distances[ind], pose, variance, isotropic)
+            if grad <= self.tolerance:
+                break
+        return sum
 
 if __name__ == "__main__":
     a = NLS(None, np.array([[2.0, 2.0], [5.0, 5.0], [8.0, 2.0]]), 0.01, 0.1)

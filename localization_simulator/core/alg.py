@@ -24,7 +24,7 @@ def brute(param):
     stop = perf_counter()
     print("time: " + str(stop-start))
     print("max inf gain: " + str(inf_max))
-    return solution
+    return [solution,inf_max,0,stop-start]
 
 def greedy(param):
     start = perf_counter()
@@ -47,7 +47,7 @@ def greedy(param):
     stop = perf_counter()
     print("time: " + str(stop-start))
     print("max inf gain: " + str(inf_max))
-    return solution
+    return [solution,inf_max,0,stop-start]
 
 def cma_es(param):
     start = perf_counter()
@@ -74,7 +74,7 @@ def cma_es(param):
     stop = perf_counter()
     print("time: " + str(stop-start))
     print("max inf gain: " + str(inf_max))
-    return solution
+    return [solution,inf_max,0,stop-start]
 
 if __name__ == "__main__":
 

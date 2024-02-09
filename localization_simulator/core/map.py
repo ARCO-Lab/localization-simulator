@@ -24,7 +24,8 @@ from ..utils.nls import NLS
 from .error import Error
 import tkinter as tk
 from tkinter import ttk
-from .alg import brute, greedy
+from .alg import brute, greedy, cma_es
+from ..utils.result import Parameters, Result
 
 class Map:
     """Module for creating simulation maps.
@@ -83,6 +84,7 @@ class Map:
             poses (list[tuple[float]]): The desired poses for the trajectory.
             interval (int): The number of substeps in between each pose. Can be thought as the number of points in a straight line between poses.
         """
+        self.poses = poses
         if self.nDim == 2:
             self.trajectory = Traj2D(poses, interval)
         else:
@@ -118,13 +120,37 @@ class Map:
     def headless(self):
         """ Performs the simulation without any visualization
         """
+        res = Result("Brute-force","Greedy","CMA-ES")
         anchorLocations = np.array([a.location for a in self.anchors])
-        # nls = NLS(self.points,self.gradNorms,np.array([a.location for a in self.anchors]), variance=0.01, tolerance=0.1)
-
         d = self.addNoise()  
 
-        print(brute(self.k,self.trajectory.numpy, anchorLocations,d, self.isotropic, self.variance))
-        print(greedy(self.k,self.trajectory.numpy, anchorLocations,d, self.isotropic, self.variance))
+        nls = NLS(self.points,self.gradNorms,anchorLocations,variance=0.01,tolerance=0.1)
+
+        param = Parameters(self.dim,self.k,self.trajectory.numpy,anchorLocations,d,self.isotropic,self.variance)
+        initial = self.poses + np.array([np.random.normal(0, self.isotropic[0][0]), np.random.normal(0, self.isotropic[0][0])])
+
+        resBrute = brute(param)
+        print(resBrute[0])
+        aBrut = np.array([anchorLocations[i] for i in resBrute[0]])
+        print(np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resBrute[0]], i, aBrut, self.variance, self.isotropic) for i in range(len(resBrute[0]))])))
+
+
+        resGreedy = greedy(param)
+        print(resGreedy[0])
+        aGreedy = np.array([anchorLocations[i] for i in resGreedy[0]])
+        print(np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resGreedy[0]], i, aGreedy, self.variance, self.isotropic) for i in range(len(resGreedy[0]))])))
+
+
+        resCmaes = cma_es(param)
+        resCmaes[0] = sorted(resCmaes[0])
+        print(resCmaes[0])
+        aCmaes = np.array([anchorLocations[i] for i in resCmaes[0]])
+        print(np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resCmaes[0]], i, aCmaes, self.variance, self.isotropic) for i in range(len(resCmaes[0]))])))
+
+
+
+
+        # res.toLatex("test2")
 
     def visualize2D(self):
         """Visualizes the trajectory (2D) using Matplotlib animation
