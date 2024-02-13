@@ -5,7 +5,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from ..core.inf import isotropic, addNoise
-from ..core.alg import greedy,brute,cma_es, random_set
+# from ..core.alg import greedy,brute,cma_es, random_set
 import copy
 
 class Parameters():

@@ -32,8 +32,10 @@ def outer_grad(x, p, d, sol):
 
     for j in sol:
         distance = np.linalg.norm(x-p[j])
-        if distance == 0:
-            print(f"x:{x} \t p[j]:{p[j]} \t distance:{distance}")
+        # if distance == 0:
+        #     print(f"x:{x} \t p[j]:{p[j]} \t distance:{distance}")
+        if np.isnan(d[j]):
+            continue
         g = ((distance-d[j])*((x-p[j])/distance))
         gradient += np.outer(g,g)
         

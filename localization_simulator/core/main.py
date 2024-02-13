@@ -25,6 +25,7 @@ def customRoutine(config, headless=False):
     m = Map(config["map"])
     m.setK(config["k"])
     m.setVariance(config["sensor_measurement_variance"])
+    m.setIsotropic(config["isotropic"])
     m.placeAnchor(anchorList)
     m.loadTraj(config["pose"],6)
     if headless:

@@ -1,6 +1,6 @@
 from time import perf_counter
 from .inf import fim, isotropic
-# from ..utils.result import Parameters
+from ..utils.result import Parameters
 import numpy as np
 import pandas as pd
 from itertools import combinations
@@ -59,6 +59,21 @@ def greedy(param):
     print("max inf gain: " + str(inf_max))
     return [solution,inf_max,0,stop-start]
 
+def greedyAncMax(param):
+    start = perf_counter()
+    solution = set()
+
+    connections = np.sum(~np.isnan(param.d), axis=0)
+
+    for _ in range(param.k):
+        ancMax = np.argmax(connections)
+        solution.add(ancMax)
+        connections[ancMax] = -1
+
+    inf = fim(param.x,param.p,param.d,solution,param.iso_var,param.sensor_var)
+    stop = perf_counter()
+    return [solution,inf,0,stop-start]
+
 def cma_es(param):
     start = perf_counter()
     inf_max = float('-inf') 
@@ -87,8 +102,6 @@ def cma_es(param):
     return [solution,inf_max,0,stop-start]
 
 if __name__ == "__main__":
-
-    pass
     # k = 4
     # p = np.column_stack((np.random.randint(0,100,30),np.random.randint(0,100,30),np.random.randint(0,100,30)))
     # x = np.array([(1.5,1.5,1.5),(2,2.5,2.5),(2.5,1.5,1.5)])
@@ -96,20 +109,25 @@ if __name__ == "__main__":
     # iso = isotropic(3,2)
     # variance = 0.25
 
-    # k = 3
-    # p = np.column_stack((np.random.randint(0,50,10),np.random.randint(0,50,10)))
-    # x = np.column_stack((np.random.randint(0,50,2),np.random.randint(0,50,2)))
-    # iso = isotropic(2,2)
-    # variance = 1
+    k = 3
+    p = np.column_stack((np.random.randint(0,50,10),np.random.randint(0,50,10)))
+    x = np.column_stack((np.random.randint(0,50,2),np.random.randint(0,50,2)))
+    iso = isotropic(2,2)
+    variance = 1
+    cutoff = 20
 
-    # def addNoise(x, p, variance):
-    #     d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
-    #     noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
-    #     return d + noise
+    def addNoise(p, x, variance, cutoff):
+        d = np.array([[np.linalg.norm(i - j) if np.linalg.norm(i - j) < cutoff else np.nan for j in p] for i in x])
+        noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
+        noisy_d = d + noise
+        noisy_d[np.isnan(d)] = np.nan 
+        return noisy_d
     
-    # d = addNoise(x,p,variance)
+    d = addNoise(p,x,variance,cutoff)
+    print(d)
 
-    # param = Parameters((50,50),k,x,p,d,iso,variance)
+    param = Parameters((50,50),k,x,p,d,iso,variance)
+    print(greedyAncMax(param))
     # # print(brute(k,x,p,d,iso,variance))
     # print(greedy(param))
     # print(cma_es(param))

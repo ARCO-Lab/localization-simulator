@@ -48,7 +48,7 @@ class Map:
         """
         self.dim = dim
         self.nDim = len(dim)
-        self.fig, self.ax = Plot.create2D(self.dim) if self.nDim==2 else Plot.create3D(self.dim)
+        # self.fig, self.ax = Plot.create2D(self.dim) if self.nDim==2 else Plot.create3D(self.dim)
         self.trajectory = None
         self.points = []
         self.gradNorms = []
@@ -62,6 +62,9 @@ class Map:
     def setVariance(self, variance):
         self.variance = variance
     
+    def setIsotropic(self,isotropicVariance):
+        self.isotropic = isotropic(self.nDim,isotropicVariance)
+    
     def placeAnchor(self, anchorList):
         """Method for placing anchors in a map.
 
@@ -69,13 +72,12 @@ class Map:
             anchorList (list[Anchor]): The list of anchors to place in a map.
         """
         self.anchors = anchorList
-        self.isotropic = isotropic(self.nDim,random.uniform(0,0.5))
-        if self.nDim == 2:
-            for a in anchorList:
-                self.ax.add_patch(Rectangle(a.location,0.5,0.5,fc="black",ec=a.clr))
-        else:
-            for a in anchorList:
-                self.ax.scatter(a.location[0], a.location[1], a.location[2], c='black', edgecolors=a.clr ,marker='o', s=100)
+        # if self.nDim == 2:
+        #     for a in anchorList:
+        #         self.ax.add_patch(Rectangle(a.location,0.5,0.5,fc="black",ec=a.clr))
+        # else:
+        #     for a in anchorList:
+        #         self.ax.scatter(a.location[0], a.location[1], a.location[2], c='black', edgecolors=a.clr ,marker='o', s=100)
             
     def loadTraj(self, poses, interval):
         """Method for loading a trajectory into a map
@@ -113,63 +115,108 @@ class Map:
         return root, value_label, listBox
 
     @staticmethod
-    def addNoise(p,x,variance):
-        d = np.array([[np.linalg.norm(i - j) for j in p] for i in x])
+    def addNoise(p, x, variance, cutoff):
+        d = np.array([[np.linalg.norm(i - j) if np.linalg.norm(i - j) < cutoff else np.nan for j in p] for i in x])
         noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
-        return d + noise
+        noisy_d = d + noise
+        noisy_d[np.isnan(d)] = np.nan 
+        return noisy_d
 
     def headless(self):
         """ Performs the simulation without any visualization
         """
+        # print(f"ISOTROPIC VARIANCE: {self.isotropic}")
         res = Result("Brute-force","Greedy","CMA-ES")
-        runs = 10
+        runs = 50
         anchorLocations = np.array([a.location for a in self.anchors])
+        cutoff = 30
 
-        # anchorLocations =  np.column_stack((np.random.randint(10,1050,5),np.random.randint(0,610,5)))
-        d = self.addNoise(anchorLocations,self.poses,self.variance)  
+        # anchorLocations =  np.column_stack((np.random.randint(10,1050,50),np.random.randint(0,610,50)))
+        # d = self.addNoise(anchorLocations,self.poses,self.variance)  
 
-        nls = NLS(self.points,self.gradNorms,anchorLocations,variance=0.01,tolerance=1e-6)
+        # nls = NLS(self.points,self.gradNorms,anchorLocations,variance=0.01,tolerance=1e-6)
 
-        param = Parameters(self.dim,self.k,self.poses,anchorLocations,d,self.isotropic,self.variance)
-        noise = np.random.normal(0, self.isotropic[0][0], (len(self.poses), 2))
-        initial = self.poses + noise
+        # param = Parameters(self.dim,self.k,self.poses,anchorLocations,d,self.isotropic,self.variance)
+        # noise = np.random.normal(0, np.sqrt(self.isotropic[0][0]), (len(self.poses), 2))
+        # initial = self.poses + noise
 
-        resRandom = random_set(param)
-        resRandom[0] = sorted(resRandom[0])
-        print(resRandom[0])
-        aRandom = np.array([anchorLocations[i] for i in resRandom[0]])
-        print(f"Inf gain: {resRandom[1]}")
-        print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resRandom[0]], i, aRandom, self.variance, self.isotropic) for i in range(len(resRandom[0]))]))}")
-        print("____________________________________________________________________________________________________________________________________________________________________")
+        plotinfrand = []
+        plotinfgreedy = []
+        plotinfcma = []
+        plotrmserand = []
+        plotrmsegreedy = []
+        plotrmsecma = []
 
-        resBrute = brute(param)
-        resBrute[0] = sorted(resBrute[0])
-        print(resBrute[0])
-        aBrute = np.array([anchorLocations[i] for i in resBrute[0]])
-        print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resBrute[0]], i, aBrute, self.variance, self.isotropic) for i in range(len(resBrute[0]))]))}")
-        print("____________________________________________________________________________________________________________________________________________________________________")
+        for _ in range(runs):
+
+            d = self.addNoise(anchorLocations,self.poses,self.variance, cutoff)  
+
+            print(f"DISTANCES")
+            print(d)
+
+            nls = NLS(self.points,self.gradNorms,anchorLocations,variance=0.01,tolerance=1e-6)
+
+            param = Parameters(self.dim,self.k,self.poses,anchorLocations,d,self.isotropic,self.variance)
+            noise = np.random.normal(0, np.sqrt(self.isotropic[0][0]), (len(self.poses), 2))
+            initial = self.poses + noise
+
+            resRandom = random_set(param)
+            resRandom[0] = sorted(resRandom[0])
+            print("\nRANDOM")
+            print("_____________")
+            print(resRandom[0])
+            aRandom = np.array([anchorLocations[i] for i in resRandom[0]])
+            
+            plotinfrand.append(resRandom[1])
+            plotrmserand.append(np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resRandom[0]], i, aRandom, self.variance, self.isotropic) for i in range(len(self.poses))])))
+                            
+            print(f"Inf gain: {resRandom[1]}")
+            print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resRandom[0]], i, aRandom, self.variance, self.isotropic) for i in range(len(self.poses))]))}")
+            print("____________________________________________________________________________________________________________________________________________________________________")
 
 
-        resGreedy = greedy(param)
-        print(resGreedy[0])
-        resGreedy[0] = sorted(resGreedy[0])
-        aGreedy = np.array([anchorLocations[i] for i in resGreedy[0]])
-        print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resGreedy[0]], i, aGreedy, self.variance, self.isotropic) for i in range(len(resGreedy[0]))]))}")
-        print("____________________________________________________________________________________________________________________________________________________________________")
+            print("\nBrute")
+            print("_____________")
+            resBrute = brute(param)
+            resBrute[0] = sorted(resBrute[0])
+            print(resBrute[0])
+            aBrute = np.array([anchorLocations[i] for i in resBrute[0]])
+            print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resBrute[0]], i, aBrute, self.variance, self.isotropic) for i in range(len(self.poses))]))}")
+            print("____________________________________________________________________________________________________________________________________________________________________")
+
+            print("\nGreedy")
+            print("_____________")
+            resGreedy = greedy(param)
+            print(resGreedy[0])
+            resGreedy[0] = sorted(resGreedy[0])
+            aGreedy = np.array([anchorLocations[i] for i in resGreedy[0]])
+
+            plotinfgreedy.append(resGreedy[1])
+            plotrmsegreedy.append(np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resGreedy[0]], i, aGreedy, self.variance, self.isotropic) for i in range(len(self.poses))])))
+            print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resGreedy[0]], i, aGreedy, self.variance, self.isotropic) for i in range(len(self.poses))]))}")
+            print("____________________________________________________________________________________________________________________________________________________________________")
 
 
-        resCmaes = cma_es(param)
-        resCmaes[0] = sorted(resCmaes[0])
-        print(resCmaes[0])
-        aCmaes = np.array([anchorLocations[i] for i in resCmaes[0]])
-        print([[d[i][j] for j in resCmaes[0]] for i in range(len(resCmaes[0]))])
-        print(aCmaes)
-        print(d)
-        print([[d[i][j] for j in resCmaes[0]] for i in range(len(resCmaes[0]))])
-        print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resCmaes[0]], i, aCmaes, self.variance, self.isotropic) for i in range(len(resCmaes[0]))]))}")
-        print("____________________________________________________________________________________________________________________________________________________________________")
+            print("\nCMA")
+            print("_____________")
+            resCmaes = cma_es(param)
+            resCmaes[0] = sorted(resCmaes[0])
+            print(resCmaes[0])
+            aCmaes = np.array([anchorLocations[i] for i in resCmaes[0]])
+
+            plotinfcma.append(resCmaes[1])
+            plotrmsecma.append(np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resCmaes[0]], i, aCmaes, self.variance, self.isotropic) for i in range(len(self.poses))])))
+            print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resCmaes[0]], i, aCmaes, self.variance, self.isotropic) for i in range(len(self.poses))]))}")
+            print("____________________________________________________________________________________________________________________________________________________________________")
 
 
+        plt.xlim(0,200)
+        plt.scatter(plotrmserand,plotinfrand, label="Random")
+        plt.scatter(plotrmsecma,plotinfcma, label="CMA")
+        plt.scatter(plotrmsegreedy,plotinfgreedy, label="Greedy")
+        
+        plt.legend()
+        plt.show()
 
 
         # res.toLatex("test2")
@@ -288,7 +335,11 @@ class Map:
         value_root.mainloop()
 
 if __name__ == "__main__":
-    pass
+    p = np.array([(0,0),(2,2),(4,4),(100,100),(5,5)])
+    x = np.array([(3.9,3.9),(4.5,4.5)])
+    variance = 1
+    cutoff = 10
+    print(Map.addNoise(p,x,0,cutoff))
 
 
     
