@@ -110,23 +110,10 @@ class NLS:
         # print(f"MEAS:{measurements}")
 
         mask = ~np.isnan(measurements)
-        valid_distances = distances[mask]
         valid_measurements = measurements[mask]
 
-        # print(f"V_MEAS:{valid_measurements}")
-        # print(f"V_DIST:{valid_distances}")
-        
-        # print(f"ADDED TERM: {np.dot(np.transpose(pose-est_pose),np.linalg.inv(isotropic))@(pose-est_pose)}")
-        # lol = lambda p: np.sum((1 / (variance)) * (valid_distances - valid_measurements) ** 2)
-        # print(f"LOOK HERE: {lol(est_pose)}")
-
-        test_g = grad(lambda p: (np.dot(np.transpose(pose-p),np.linalg.inv(isotropic))@(pose-p)))(est_pose)
-
-        # print(f"TEST GRAD {test_g}")
-        # print(mask)
-
-        g = grad(lambda p: (np.dot(np.transpose(pose-p[0]),np.linalg.inv(isotropic))@(pose-p[0])) + np.sum((1 / (variance)) * (self.eqMask(p, mask) - valid_measurements) ** 2))(est_pose)
-        h = hessian(lambda p: (np.dot(np.transpose(pose-p[0]),np.linalg.inv(isotropic))@(pose-p[0])) + np.sum((1 / (variance)) * (self.eqMask(p,mask) - valid_measurements) ** 2))(est_pose)
+        g = grad(lambda p: (np.dot(np.transpose(pose-p),np.linalg.inv(isotropic))@(pose-p)) + np.sum((1 / (variance)) * (self.eqMask(p, mask) - valid_measurements) ** 2))(est_pose)
+        h = hessian(lambda p: (np.dot(np.transpose(pose-p),np.linalg.inv(isotropic))@(pose-p)) + np.sum((1 / (variance)) * (self.eqMask(p,mask) - valid_measurements) ** 2))(est_pose)
 
         # print(f"ACTUAL GRAD {g}")
         # print(h)
@@ -137,7 +124,7 @@ class NLS:
         est_x -= delta_pose[0]
         est_y -= delta_pose[1]
         
-        return np.array([est_x, est_y]), np.linalg.norm(g)
+        return np.array([est_x, est_y]), np.linalg.norm(g), h
 
     def process(self, pose, guess, distances=None):
         """Perform Newtons method to refine an intial guess for the pose based on distance measurements until a tolerance is met.
@@ -165,15 +152,46 @@ class NLS:
         self.anchors = anchors
         # print(f"Pose is {pose}\tguess is {guess}\tdistances is {distances}")
         counter = 0
-        # print("BUG____________________")
+        guess = np.array(guess)
+        pose = pose + noise
         while True:
-            sum += np.linalg.norm(guess-pose)**2
-            guess, grad = self.estimatePose(guess, distances, pose, variance, isotropic)
+            guess, grad, _ = self.estimatePose(guess, distances, pose, variance, isotropic)
             # print(f"Aprrox {counter}:{guess}")
             counter += 1
             if grad <= self.tolerance:
                 break
-        return sum
+        return np.linalg.norm(guess-pose)**2
+
+    
+    def gradNorm(self, pose, guess, distances, anchors, variance, isotropic):
+        sum = 0
+        self.anchors = anchors
+        # print(f"Pose is {pose}\tguess is {guess}\tdistances is {distances}")
+        counter = 0
+        # print("BUG____________________")
+        while True:
+            sum += np.linalg.norm(guess-pose)**2
+            guess, grad, _ = self.estimatePose(guess, distances, pose, variance, isotropic)
+            # print(f"Aprrox {counter}:{guess}")
+            counter += 1
+            if grad <= self.tolerance:
+                break
+        return grad
+
+    def hesEig(self, pose, guess, distances, anchors, variance, isotropic):
+        sum = 0
+        self.anchors = anchors
+        # print(f"Pose is {pose}\tguess is {guess}\tdistances is {distances}")
+        counter = 0
+        # print("BUG____________________")
+        while True:
+            sum += np.linalg.norm(guess-pose)**2
+            guess, grad, hessian = self.estimatePose(guess, distances, pose, variance, isotropic)
+            # print(f"Aprrox {counter}:{guess}")
+            counter += 1
+            if grad <= self.tolerance:
+                break
+        return np.linalg.eigvalsh(hessian)
 
 if __name__ == "__main__":
     # a = NLS(None, np.array([[2.0, 2.0], [5.0, 5.0], [8.0, 2.0]]), 0.01, 0.1)
