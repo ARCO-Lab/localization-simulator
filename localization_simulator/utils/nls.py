@@ -68,6 +68,23 @@ class NLS:
         est_x, est_y = est_pose
         est_distances = np.sqrt((self.anchors[:, 0] - est_x)**2 + (self.anchors[:, 1] - est_y)**2)
         return est_distances
+    
+    def eqMask(self, est_pose, mask):
+        """ 
+        Calculates the Euclidean distances from anchor points to given pose.
+
+        Used as part of the objective function.
+
+        Args:
+            est_pose (numpy.ndarray[float]s): The pose estimate
+
+        Returns:
+            (numpy.ndarray[float]):  Euclidean distances from the estimated pose to each anchor
+        """
+        est_x, est_y = est_pose
+        est_distances = np.sqrt((self.anchors[:, 0] - est_x)**2 + (self.anchors[:, 1] - est_y)**2)
+        est_distances = est_distances[mask]
+        return est_distances
 
     # Using Newtons method and autograd for gradient and hessian
     def estimatePose(self, est_pose, measurements, pose, variance, isotropic):
@@ -87,9 +104,32 @@ class NLS:
         """
         est_x, est_y = est_pose
 
+        measurements = np.array(measurements)
+        distances = self.eq(est_pose)
+
+        # print(f"MEAS:{measurements}")
+
+        mask = ~np.isnan(measurements)
+        valid_distances = distances[mask]
+        valid_measurements = measurements[mask]
+
+        # print(f"V_MEAS:{valid_measurements}")
+        # print(f"V_DIST:{valid_distances}")
         
-        g = grad(lambda p: (np.dot(np.transpose(pose-p),np.linalg.inv(isotropic))@(pose-p)) + np.sum((1/(variance))*(self.eq(p) - measurements)**2))(est_pose)
-        h = hessian(lambda p: (np.dot(np.transpose(pose-p),np.linalg.inv(isotropic))@(pose-p)) + np.sum((1/(variance))*(self.eq(p) - measurements)**2))(est_pose)
+        # print(f"ADDED TERM: {np.dot(np.transpose(pose-est_pose),np.linalg.inv(isotropic))@(pose-est_pose)}")
+        # lol = lambda p: np.sum((1 / (variance)) * (valid_distances - valid_measurements) ** 2)
+        # print(f"LOOK HERE: {lol(est_pose)}")
+
+        test_g = grad(lambda p: (np.dot(np.transpose(pose-p),np.linalg.inv(isotropic))@(pose-p)))(est_pose)
+
+        # print(f"TEST GRAD {test_g}")
+        # print(mask)
+
+        g = grad(lambda p: (np.dot(np.transpose(pose-p[0]),np.linalg.inv(isotropic))@(pose-p[0])) + np.sum((1 / (variance)) * (self.eqMask(p, mask) - valid_measurements) ** 2))(est_pose)
+        h = hessian(lambda p: (np.dot(np.transpose(pose-p[0]),np.linalg.inv(isotropic))@(pose-p[0])) + np.sum((1 / (variance)) * (self.eqMask(p,mask) - valid_measurements) ** 2))(est_pose)
+
+        # print(f"ACTUAL GRAD {g}")
+        # print(h)
 
         h_inv = np.linalg.pinv(h)
         delta_pose = np.dot(h_inv, g)
@@ -120,20 +160,29 @@ class NLS:
         self.points.append(p)
         self.gradNorms.append(grads)
     
-    def rmse(self, pose, guess, distances, ind, anchors, variance, isotropic):
+    def rmse(self, pose, guess, distances, anchors, variance, isotropic):
         sum = 0
         self.anchors = anchors
-        print(f"Pose is {pose}\tguess is {guess}\tdistances is {distances}\tind is {ind}")
+        # print(f"Pose is {pose}\tguess is {guess}\tdistances is {distances}")
         counter = 0
+        # print("BUG____________________")
         while True:
             sum += np.linalg.norm(guess-pose)**2
-            guess, grad = self.estimatePose(guess, distances[ind], pose, variance, isotropic)
-            print(f"Aprrox {counter}:{guess}")
+            guess, grad = self.estimatePose(guess, distances, pose, variance, isotropic)
+            # print(f"Aprrox {counter}:{guess}")
             counter += 1
             if grad <= self.tolerance:
                 break
         return sum
 
 if __name__ == "__main__":
-    a = NLS(None, np.array([[2.0, 2.0], [5.0, 5.0], [8.0, 2.0]]), 0.01, 0.1)
-    a.process(np.array([4.0, 4.0]), np.array([1.0, 1.0]))
+    # a = NLS(None, np.array([[2.0, 2.0], [5.0, 5.0], [8.0, 2.0]]), 0.01, 0.1)
+    # a.process(np.array([4.0, 4.0]), np.array([1.0, 1.0]))
+    import numpy as np
+
+    # Example distance array with NaN values
+    distances = np.array([1.0, 2.0, np.nan, 4.0, np.nan, 6.0])
+
+    # Mask NaN values
+    valid_distances = distances[~np.isnan(distances)]
+    # print(valid_distances)

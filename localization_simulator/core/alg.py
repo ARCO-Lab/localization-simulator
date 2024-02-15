@@ -8,6 +8,7 @@ import cma
 import random
 
 def random_set(param):
+    print(f"len Param P: {len(param.p)}")
     start = perf_counter()
     solution = set()
     while len(solution) < param.k:
@@ -74,6 +75,37 @@ def greedyAncMax(param):
     stop = perf_counter()
     return [solution,inf,0,stop-start]
 
+def greedyPosGuarantee(param):
+    start = perf_counter()
+    solution = set()
+
+    covered = np.zeros(np.shape(param.d)[0])
+    connections = np.sum(~np.isnan(param.d), axis=1)
+
+    for _ in range(param.k):
+        if np.all(covered==1):
+            ancMax = np.argmax(connections)
+            solution.add(ancMax)
+            connections[ancMax] = -1
+        else:
+            m = -1
+            j_best = None
+            i_best = None
+            for i,j in enumerate(param.d):
+                c = np.count_nonzero(covered != ~np.isnan(j))
+                if c > m:
+                    m = c
+                    j_best = ~np.isnan(j)
+                    i_best = i
+            covered[j_best] = 1
+            solution.add(i_best)
+            connections[i_best] = -1
+
+    inf = fim(param.x, param.p, param.d, solution, param.iso_var, param.sensor_var)
+    stop = perf_counter()
+
+    return [solution, inf, 0, stop - start]
+
 def cma_es(param):
     start = perf_counter()
     inf_max = float('-inf') 
@@ -109,7 +141,7 @@ if __name__ == "__main__":
     # iso = isotropic(3,2)
     # variance = 0.25
 
-    k = 3
+    k = 2
     p = np.column_stack((np.random.randint(0,50,10),np.random.randint(0,50,10)))
     x = np.column_stack((np.random.randint(0,50,2),np.random.randint(0,50,2)))
     iso = isotropic(2,2)
@@ -124,10 +156,14 @@ if __name__ == "__main__":
         return noisy_d
     
     d = addNoise(p,x,variance,cutoff)
-    print(d)
+    # print(d)
+
+    d = data = np.array([[2, 3, np.nan],[3, 4, np.nan],[np.nan, np.nan, 2]])
 
     param = Parameters((50,50),k,x,p,d,iso,variance)
-    print(greedyAncMax(param))
+    # print(greedyAncMax(param))
+    print(greedyPosGuarantee(param))
+
     # # print(brute(k,x,p,d,iso,variance))
     # print(greedy(param))
     # print(cma_es(param))
@@ -157,3 +193,4 @@ if __name__ == "__main__":
     # print(sanity(anc)[1])
 
     # print(greedy(2,x,p,d,iso,variance))
+
