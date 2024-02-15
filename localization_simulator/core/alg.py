@@ -6,6 +6,7 @@ import pandas as pd
 from itertools import combinations
 import cma
 import random
+from ..utils.nls import NLS
 
 def random_set(param):
     print(f"len Param P: {len(param.p)}")
@@ -36,6 +37,31 @@ def brute(param):
     print("time: " + str(stop-start))
     print("max inf gain: " + str(inf_max))
     return [solution,inf_max,0,stop-start]
+
+def bruteRMSE(param, initial):
+    nls = NLS(None,None,None,1e-9,None,None)
+    start = perf_counter()
+    candidates = list(combinations(range(len(param.p)),param.k))
+
+    rmse_min = float('inf')
+    solution = set()
+
+    for c in candidates:
+        print(c)
+        ancC = np.array([param.p[i] for i in c])
+        print(d)
+        print([[d[i][j] for j in c] for i in range(len(param.x))])
+        rmse = np.sqrt(np.mean([nls.rmse(initial[i],param.x[i], [d[i][j] for j in c], ancC, param.sensor_var, param.iso_var) for i in range(len(param.x))]))
+
+        if rmse < rmse_min:
+            rmse_min = rmse
+            solution = c
+    
+    stop = perf_counter()
+    print("time: " + str(stop-start))
+    print("min Rmse: " + str(rmse_min))
+    return [solution,rmse_min,0,stop-start]
+
 
 def greedy(param):
     start = perf_counter()
@@ -187,9 +213,9 @@ if __name__ == "__main__":
     # iso = isotropic(3,2)
     # variance = 0.25
 
-    k = 2
-    p = np.column_stack((np.random.randint(0,50,10),np.random.randint(0,50,10)))
-    x = np.column_stack((np.random.randint(0,50,2),np.random.randint(0,50,2)))
+    k = 4
+    p = np.column_stack((np.random.randint(0,50,40),np.random.randint(0,50,40)))
+    x = np.column_stack((np.random.randint(0,50,20),np.random.randint(0,50,20)))
     iso = isotropic(2,2)
     variance = 1
     cutoff = 20
@@ -202,13 +228,16 @@ if __name__ == "__main__":
         return noisy_d
     
     d = addNoise(p,x,variance,cutoff)
-    # print(d)
 
-    d = data = np.array([[2, 3, np.nan],[3, 4, np.nan],[np.nan, np.nan, 2]])
+    # d = data = np.array([[2, 3, np.nan],[3, 4, np.nan],[np.nan, np.nan, 2]])
 
     param = Parameters((50,50),k,x,p,d,iso,variance)
+    noise = np.random.normal(0, np.sqrt(param.iso_var[0][0]), (len(param.x), 2))
+    initial = param.x + noise
     # print(greedyAncMax(param))
-    print(greedyPosGuarantee(param))
+    # print(greedyPosGuarantee(param))
+    print(bruteRMSE(param,initial))
+
 
     # # print(brute(k,x,p,d,iso,variance))
     # print(greedy(param))

@@ -8,6 +8,7 @@ Todo:
 
 import autograd.numpy as np
 from autograd import grad, hessian
+import copy
 class NLS:
     """Newton solver for approximating the solution the solution at a given timestep.
 
@@ -147,16 +148,24 @@ class NLS:
         self.anchors = anchors
         # print(f"Pose is {pose}\tguess is {guess}\tdistances is {distances}")
         counter = 0
+        # guess = np.array(guess)
+
         guess = np.array(guess)
-        # noise = np.random.normal(0, np.sqrt(isotropic[0][0]), size=np.shape(pose))
-        # pose = pose + noise
+
+        Real = copy.deepcopy(guess)
+
+        pose = pose.astype(float)
+        guess = guess.astype(float)
+        guess = np.array(guess)
+
         while True:
+            # print(Real)
             guess, grad, _ = self.estimatePose(guess, distances, pose, variance, isotropic)
             # print(f"Aprrox {counter}:{guess}")
             counter += 1
             if grad <= self.tolerance:
                 break
-        return np.linalg.norm(guess-pose)**2
+        return np.linalg.norm(guess-Real)**2
 
     
     def gradNorm(self, pose, guess, distances, anchors, variance, isotropic):
