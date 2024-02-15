@@ -60,6 +60,52 @@ def greedy(param):
     print("max inf gain: " + str(inf_max))
     return [solution,inf_max,0,stop-start]
 
+def greedyTrace(param):
+    start = perf_counter()
+    solution = set()
+
+    for _ in range(param.k):
+        inf_max = float('-inf')
+        j_best = None
+        
+        for j in range(len(param.p)):
+            inf_j = fim(param.x,param.p,param.d,solution.union({j}),param.iso_var,param.sensor_var, trace=True)
+            # print(f"Set:{solution.union({j})} and inf_j:{inf_j} ")
+
+            if inf_j > inf_max:
+                inf_max = inf_j
+                j_best = j
+
+        solution = solution.union({j_best})
+
+    stop = perf_counter()
+    print("time: " + str(stop-start))
+    print("max inf gain: " + str(inf_max))
+    return [solution,inf_max,0,stop-start]
+
+def greedyMinEig(param):
+    start = perf_counter()
+    solution = set()
+
+    for _ in range(param.k):
+        inf_max = float('-inf')
+        j_best = None
+        
+        for j in range(len(param.p)):
+            inf_j = fim(param.x,param.p,param.d,solution.union({j}),param.iso_var,param.sensor_var, trace=True)
+            # print(f"Set:{solution.union({j})} and inf_j:{inf_j} ")
+
+            if inf_j > inf_max:
+                inf_max = inf_j
+                j_best = j
+
+        solution = solution.union({j_best})
+
+    stop = perf_counter()
+    print("time: " + str(stop-start))
+    print("max inf gain: " + str(inf_max))
+    return [solution,inf_max,0,stop-start]
+
 def greedyAncMax(param):
     start = perf_counter()
     solution = set()

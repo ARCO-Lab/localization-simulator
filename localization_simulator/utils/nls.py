@@ -105,10 +105,6 @@ class NLS:
         est_x, est_y = est_pose
 
         measurements = np.array(measurements)
-        distances = self.eq(est_pose)
-
-        # print(f"MEAS:{measurements}")
-
         mask = ~np.isnan(measurements)
         valid_measurements = measurements[mask]
 
@@ -148,12 +144,12 @@ class NLS:
         self.gradNorms.append(grads)
     
     def rmse(self, pose, guess, distances, anchors, variance, isotropic):
-        sum = 0
         self.anchors = anchors
         # print(f"Pose is {pose}\tguess is {guess}\tdistances is {distances}")
         counter = 0
         guess = np.array(guess)
-        pose = pose + noise
+        # noise = np.random.normal(0, np.sqrt(isotropic[0][0]), size=np.shape(pose))
+        # pose = pose + noise
         while True:
             guess, grad, _ = self.estimatePose(guess, distances, pose, variance, isotropic)
             # print(f"Aprrox {counter}:{guess}")

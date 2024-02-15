@@ -42,7 +42,7 @@ def outer_grad(x, p, d, sol):
     return 2*gradient
 
 
-def fim(x, p, d, sol, isotropic, variance, hessian=False):
+def fim(x, p, d, sol, isotropic, variance, hessian=False, trace=False):
     """_summary_
 
     Args:
@@ -61,11 +61,17 @@ def fim(x, p, d, sol, isotropic, variance, hessian=False):
     inf = np.repeat(np.linalg.inv(isotropic)[np.newaxis, :, :], m, axis=0)
     for _ in sol:
         for i in range(m):
-            grad = outer_grad(x[i],p,d[i],sol)
-            grad = (1/(variance**2))*grad
-            inf[i] += grad
+            if hessian:
+                pass
+            else:
+                grad = outer_grad(x[i],p,d[i],sol)
+                grad = (1/(variance**2))*grad
+                inf[i] += grad
     
-    return sum([log_det(inf[i]) for i in range(m)])
+    if trace:
+        return sum([np.trace(inf[i]) for i in range(m)])
+    else:
+        return sum([log_det(inf[i]) for i in range(m)])
 
 def hessian_range_localization(x, p, d):
     """
@@ -78,7 +84,7 @@ def hessian_range_localization(x, p, d):
     distance = np.linalg.norm(x - p)
     direction = np.outer(x-p,x-p)
 
-    term1 = direction / distance
+    term1 = direction / (distance**2)
     for i in range(m):
         term2 = ((distance - d[i])*direction / (distance ** 3))
         term3 = ((distance - d[i]) / distance) * np.identity(n)
