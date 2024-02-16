@@ -1,6 +1,6 @@
 from time import perf_counter
 from .inf import fim, isotropic
-from ..utils.result import Parameters
+# from ..utils.result import Parameters
 import numpy as np
 import pandas as pd
 from itertools import combinations
@@ -152,7 +152,7 @@ def greedyPosGuarantee(param):
     solution = set()
 
     covered = np.zeros(np.shape(param.d)[0])
-    connections = np.sum(~np.isnan(param.d), axis=1)
+    connections = np.sum(~np.isnan(param.d), axis=0)
 
     for _ in range(param.k):
         if np.all(covered==1):
@@ -163,7 +163,8 @@ def greedyPosGuarantee(param):
             m = -1
             j_best = None
             i_best = None
-            for i,j in enumerate(param.d):
+            for i in range(len(param.d[0])):
+                j = [k[i] for k in param.d]
                 c = np.count_nonzero(covered != ~np.isnan(j))
                 if c > m:
                     m = c

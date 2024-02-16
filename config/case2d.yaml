@@ -1,6 +1,6 @@
 name: "case2d"
 map: [1059,641]
-k: 5
+k: 2
 anchor:
   - name: "a"
     location: [8,5]

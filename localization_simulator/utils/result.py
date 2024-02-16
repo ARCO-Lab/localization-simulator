@@ -5,7 +5,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from ..core.inf import isotropic, addNoise
-# from ..core.alg import greedy,brute,cma_es, random_set
+from ..core.alg import greedy,brute,cma_es, random_set
 import copy
 
 class Parameters():
@@ -134,31 +134,28 @@ if __name__ == "__main__":
     r.add("Greedy",[1,2,3,4,5,6,7])
     print(r.df)
     # r.toCSV("test")
-    r.toLatex("test3")
+    r.toLatex("test5")
 
-
-
-    dim = (1059,641)
-    k = 2
-    p = np.column_stack((np.random.randint(10,1050,5),np.random.randint(0,610,5)))
-    # x = np.column_stack((np.random.randint(0,1059,10),np.random.randint(0,641,10)))
-    x = np.array([(1030,0),(1030,150),(970,160),(960,220),(850,230),
-                  (880,390),(840,520),(1030,510),(1030,600),(710,600),
-                  (719,531),(715,430),(587,422),(576,335),(555,254),
-                  (496,258),(490,396),(435,398),(413,423),(285,421),
-                  (290,593),(154,565),(137,425),(110,420),(82,225),
-                  (108,197),(105,178),(130,178),(140,106),(81,0)
-                  ])
-    iso = isotropic(2,6)
-    variance = 2
+    # dim = (1059,641)
+    # k = 2
+    # p = np.column_stack((np.random.randint(10,1050,50),np.random.randint(0,610,50)))
+    # # x = np.column_stack((np.random.randint(0,1059,10),np.random.randint(0,641,10)))
+    # x = np.array([(1030,0),(1030,150),(970,160),(960,220),(850,230),
+    #               (880,390),(840,520),(1030,510),(1030,600),(710,600),
+    #               (719,531),(715,430),(587,422),(576,335),(555,254),
+    #               (496,258),(490,396),(435,398),(413,423),(285,421),
+    #               (290,593),(154,565),(137,425),(110,420),(82,225),
+    #               (108,197),(105,178),(130,178),(140,106),(81,0)
+    #               ])
+    # iso = isotropic(2,10)
+    # variance = 5
     
-    d = addNoise(x,p,variance)
+    # d = addNoise(x,p,variance)
 
-    param = Parameters(dim,k,x,p,d,iso,variance)
-    print(random_set(param))
+    # param = Parameters(dim,k,x,p,d,iso,variance)
     # param2, param3 = copy.deepcopy(param), copy.deepcopy(param)
 
-    # param.writeTxt("2dcase - all 3")
+    # # param.writeTxt("2dcase - all 3")
     # yb,yg,yc = param.visualize("assets/factorylayout1.jpg"),param2.visualize("assets/factorylayout2.jpg"),param3.visualize("assets/factorylayout3.jpg")
 
     # bset = brute(param)
@@ -181,13 +178,13 @@ if __name__ == "__main__":
     # for c in cir:
     #     c.remove()
 
-    # # greedy
+    # greedy
     # cir = []
     # for i in gsetList:
     #     circle = yg.Circle((i),radius=10,color="y",fill=True)
     #     yg.gca().add_patch(circle)
     #     cir.append(circle)
-    # yg.scatter(gsetList[:,0],gsetList[:,1],color="r",marker = "x",s=10)
+    # yg.scatter(param.p[:,0],param.p[:,1],color="r",marker = "x",s=10)
     # yg.savefig(f"assets/{datetime.now().strftime('%B_%d_%Y_%I_%M_%S')}_greedy.png")
     
     # for c in cir:
