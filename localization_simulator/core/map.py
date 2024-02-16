@@ -88,7 +88,7 @@ class Map:
             poses (list[tuple[float]]): The desired poses for the trajectory.
             interval (int): The number of substeps in between each pose. Can be thought as the number of points in a straight line between poses.
         """
-        self.poses = poses
+        self.poses = poses[:12]
         if self.nDim == 2:
             self.trajectory = Traj2D(poses, interval)
         else:
@@ -135,11 +135,12 @@ class Map:
         """
         # print(f"ISOTROPIC VARIANCE: {self.isotropic}")
         res = Result("Random","Greedy","Measurement Greedy","Coverage Greedy")
+        res2 = Result("Brute-force","Greedy","CMA-ES")
 
         self.k = k
         self.isotropic = isotropic(self.nDim,prior)
 
-        runs = 5
+        runs = 3
         # anchorLocations = np.array([a.location for a in self.anchors])
 
         
@@ -153,6 +154,7 @@ class Map:
         # # noise = np.zeros(np.shape(self.poses))
         # initial = self.poses + noise
 
+        plotinfBrute = []
         plotinfrand = []
         plotinfgreedy = []
         plotinfcma = []
@@ -162,7 +164,7 @@ class Map:
         plotrmsecma = []
         plotrmsegreedyMax = []
         plotrmsegreedyCov = []
-        plotrmseSan = []
+        plotrmseBrute = []
         plotGradNorm = []
         plotHesEig = []
         plotrmseTest = []
@@ -178,16 +180,19 @@ class Map:
         avgRmseGreedyMax = []
         avgRmseGreedyCov = []
         avgRmseCma = []
+        avgRmseBrute = []
 
         avgRunRand = []
         avgRunGreedy = []
         avgRunGreedyMax = []
         avgRunGreedyCov = []
         avgRunCma = []
+        avgRunBrute = []
 
 
         for segment in range(0,runs):
-            anchorLocations =  np.column_stack((np.random.randint(10,1050,50),np.random.randint(0,610,50)))
+            # anchorLocations =  np.column_stack((np.random.randint(10,1050,50),np.random.randint(0,610,50)))
+            anchorLocations =  np.column_stack((np.random.randint(700,1050,20),np.random.randint(0,610,20)))
             d = self.addNoise(anchorLocations,self.poses,self.variance, cutoff)
             # d = self.addNoiseRmse(anchorLocations,self.poses,self.variance)
 
@@ -198,30 +203,35 @@ class Map:
             initial = self.poses + noise
 
 
-            print("____________________________________________________________________________________________________________________________________________________________________")
-            print("\nRANDOM")
-            print("_____________")
-            resRandom = random_set(param)
-            resRandom[0] = sorted(resRandom[0])
-            print(resRandom[0])
-            aRandom = np.array([anchorLocations[i] for i in resRandom[0]])
-            # plotinfrand.append(resRandom[1])
-            rmseRand = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i], [d[i][j] for j in resRandom[0]], aRandom, self.variance, self.isotropic) for i in range(len(self.poses))]))
-            plotrmserand.append(rmseRand)
-            avgRmseRand.append(rmseRand)
-            avgRunRand.append(resRandom[3])
-            print(f"RMSE: {rmseRand}")
-            print("____________________________________________________________________________________________________________________________________________________________________")
-
-
-            # print("\nBrute")
-            # print("_____________")
-            # resBrute = brute(param)
-            # resBrute[0] = sorted(resBrute[0])
-            # print(resBrute[0])
-            # aBrute = np.array([anchorLocations[i] for i in resBrute[0]])
-            # print(f"RMSE: {np.sqrt(np.mean([nls.rmse(self.poses[i], initial[i], [d[i][j] for j in resBrute[0]], i, aBrute, self.variance, self.isotropic) for i in range(len(self.poses))]))}")
             # print("____________________________________________________________________________________________________________________________________________________________________")
+            # print("\nRANDOM")
+            # print("_____________")
+            # resRandom = random_set(param)
+            # resRandom[0] = sorted(resRandom[0])
+            # print(resRandom[0])
+            # aRandom = np.array([anchorLocations[i] for i in resRandom[0]])
+            # # plotinfrand.append(resRandom[1])
+            # rmseRand = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i], [d[i][j] for j in resRandom[0]], aRandom, self.variance, self.isotropic) for i in range(len(self.poses))]))
+            # plotrmserand.append(rmseRand)
+            # avgRmseRand.append(rmseRand)
+            # avgRunRand.append(resRandom[3])
+            # print(f"RMSE: {rmseRand}")
+            # print("____________________________________________________________________________________________________________________________________________________________________")
+
+
+            print("\nBrute")
+            print("_____________")
+            resBrute = brute(param)
+            resBrute[0] = sorted(resBrute[0])
+            print(resBrute[0])
+            aBrute = np.array([anchorLocations[i] for i in resBrute[0]])
+            plotinfBrute.append(resBrute[1])
+            rmseBrute = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i],[d[i][j] for j in resBrute[0]], aBrute, self.variance, self.isotropic) for i in range(len(self.poses))]))
+            plotrmseBrute.append(rmseBrute)
+            avgRmseBrute.append(rmseBrute)
+            avgRunBrute.append(resBrute[3])
+            print(f"RMSE: {rmseBrute}")
+            print("____________________________________________________________________________________________________________________________________________________________________")
 
             print("\nGreedy")
             print("_____________")
@@ -229,7 +239,7 @@ class Map:
             resGreedy[0] = sorted(resGreedy[0])
             print(resGreedy[0])
             aGreedy = np.array([anchorLocations[i] for i in resGreedy[0]])
-            # plotinfgreedy.append(resGreedy[1])
+            plotinfgreedy.append(resGreedy[1])
             rmseGreedy = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i], [d[i][j] for j in resGreedy[0]], aGreedy, self.variance, self.isotropic) for i in range(len(self.poses))]))
             plotrmsegreedy.append(rmseGreedy)
             avgRmseGreedy.append(rmseGreedy)
@@ -238,76 +248,95 @@ class Map:
             print("____________________________________________________________________________________________________________________________________________________________________")
 
  
-            print("\nGreedyAncMax")
-            print("_____________")
-            resGreedyMax = greedyAncMax(param)
-            resGreedyMax[0] = sorted(resGreedyMax[0])
-            print(resGreedyMax[0])
-            aGreedyMax = np.array([anchorLocations[i] for i in resGreedyMax[0]])
-            # plotinfgreedyMax.append(resGreedyMax[1])
-            rmseGreedyMax = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i], [d[i][j] for j in resGreedyMax[0]], aGreedyMax, self.variance, self.isotropic) for i in range(len(self.poses))]))
-            plotrmsegreedyMax.append(rmseGreedyMax)
-            avgRmseGreedyMax.append(rmseGreedyMax)
-            avgRunGreedyMax.append(resGreedyMax[3])
-            print(f"RMSE: {rmseGreedyMax}")
-            print("____________________________________________________________________________________________________________________________________________________________________")           
-
-            print("\nGreedyCov")
-            print("_____________")
-            resGreedyCov = greedyPosGuarantee(param)
-            resGreedyCov[0] = sorted(resGreedyCov[0])
-            print(resGreedyCov[0])
-            aGreedyCov = np.array([anchorLocations[i] for i in resGreedyCov[0]])
-            # plotinfgreedyMax.append(resGreedyMax[1])
-            rmseGreedyCov = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i], [d[i][j] for j in resGreedyCov[0]], aGreedyCov, self.variance, self.isotropic) for i in range(len(self.poses))]))
-            plotrmsegreedyCov.append(rmseGreedyCov)
-            avgRmseGreedyCov.append(rmseGreedyCov)
-            avgRunGreedyCov.append(resGreedyCov[3])
-            print(f"RMSE: {rmseGreedyCov}")
-            print("____________________________________________________________________________________________________________________________________________________________________")           
-
-            # print("\nCMA")
+            # print("\nGreedyAncMax")
             # print("_____________")
-            # resCmaes = cma_es(param)
-            # resCmaes[0] = sorted(resCmaes[0])
-            # print(resCmaes[0])
-            # aCmaes = np.array([anchorLocations[i] for i in resCmaes[0]])
-            # # plotinfcma.append(resCmaes[1])
-            # rmseCma = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i],[d[i][j] for j in resCmaes[0]], aCmaes, self.variance, self.isotropic) for i in range(len(self.poses))]))
-            # plotrmsecma.append(rmseCma)
-            # avgRmseCma.append(rmseCma)
-            # print(f"RMSE: {rmseCma}")
-            # print("____________________________________________________________________________________________________________________________________________________________________")     
+            # resGreedyMax = greedyAncMax(param)
+            # resGreedyMax[0] = sorted(resGreedyMax[0])
+            # print(resGreedyMax[0])
+            # aGreedyMax = np.array([anchorLocations[i] for i in resGreedyMax[0]])
+            # # plotinfgreedyMax.append(resGreedyMax[1])
+            # rmseGreedyMax = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i], [d[i][j] for j in resGreedyMax[0]], aGreedyMax, self.variance, self.isotropic) for i in range(len(self.poses))]))
+            # plotrmsegreedyMax.append(rmseGreedyMax)
+            # avgRmseGreedyMax.append(rmseGreedyMax)
+            # avgRunGreedyMax.append(resGreedyMax[3])
+            # print(f"RMSE: {rmseGreedyMax}")
+            # print("____________________________________________________________________________________________________________________________________________________________________")           
+
+            # print("\nGreedyCov")
+            # print("_____________")
+            # resGreedyCov = greedyPosGuarantee(param)
+            # resGreedyCov[0] = sorted(resGreedyCov[0])
+            # print(resGreedyCov[0])
+            # aGreedyCov = np.array([anchorLocations[i] for i in resGreedyCov[0]])
+            # # plotinfgreedyMax.append(resGreedyMax[1])
+            # rmseGreedyCov = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i], [d[i][j] for j in resGreedyCov[0]], aGreedyCov, self.variance, self.isotropic) for i in range(len(self.poses))]))
+            # plotrmsegreedyCov.append(rmseGreedyCov)
+            # avgRmseGreedyCov.append(rmseGreedyCov)
+            # avgRunGreedyCov.append(resGreedyCov[3])
+            # print(f"RMSE: {rmseGreedyCov}")
+            # print("____________________________________________________________________________________________________________________________________________________________________")           
+
+            print("\nCMA")
+            print("_____________")
+            resCmaes = cma_es(param)
+            resCmaes[0] = sorted(resCmaes[0])
+            print(resCmaes[0])
+            aCmaes = np.array([anchorLocations[i] for i in resCmaes[0]])
+            plotinfcma.append(resCmaes[1])
+            rmseCma = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i],[d[i][j] for j in resCmaes[0]], aCmaes, self.variance, self.isotropic) for i in range(len(self.poses))]))
+            plotrmsecma.append(rmseCma)
+            avgRmseCma.append(rmseCma)
+            avgRunCma.append(resCmaes[3])
+            print(f"RMSE: {rmseCma}")
+            print("____________________________________________________________________________________________________________________________________________________________________")     
 
 
-        avgR = np.mean(avgRmseRand)
+        print("1")
+        infB = np.mean(plotinfBrute)
+        infG = np.mean(plotinfgreedy)
+        infC = np.mean(plotinfcma)
+
+        print("2")
+        infBstd = np.std(plotinfBrute)
+        infGstd = np.std(plotinfgreedy)
+        infCstd = np.std(plotinfcma)
+
+        print("3")
+        avgB = np.mean(avgRmseBrute)
         avgG = np.mean(avgRmseGreedy)
-        avgGM = np.mean(avgRmseGreedyMax)
-        avgGC = np.mean(avgRmseGreedyCov)
+        avgC = np.mean(avgRmseCma)
 
-        stdR = np.std(avgRmseRand)
+        print("4")
+        stdB = np.std(avgRmseBrute)
         stdG = np.std(avgRmseGreedy)
-        stdGM = np.std(avgRmseGreedyMax)
-        stdGC = np.std(avgRmseGreedyCov)
+        stdC = np.std(avgRmseCma)
 
-        runR = np.mean(avgRunRand)
+        print("5")
+        runB = np.mean(avgRunBrute)
         runG = np.mean(avgRunGreedy)
-        runGM = np.mean(avgRunGreedyMax)
-        runGC = np.mean(avgRunGreedyCov) 
+        runC = np.mean(avgRunCma)
 
-        runRstd = np.std(avgRunRand)
+
+        print("6")
+        runBstd = np.std(avgRunBrute)
         runGstd = np.std(avgRunGreedy)
-        runGMstd = np.std(avgRunGreedyMax)
-        runGCstd = np.std(avgRunGreedyCov) 
+        runCstd = np.mean(avgRunCma)
 
 
-        res.add("Random",[0,0,0,avgR,stdR,runR,runRstd])
-        res.add("Greedy",[0,0,0,avgG,stdG,runG,runGstd])
-        res.add("Measurement Greedy",[0,0,0,avgGM,stdGM,runGM,runGMstd])
-        res.add("Coverage Greedy",[0,0,0,avgGC,stdGC,runGC,runGCstd])
-        res.toLatex(f"k{k}c{cutoff}p{prior}")
+        # res.add("Random",[0,0,0,avgR,stdR,runR,runRstd])
+        # res.add("Greedy",[0,0,0,avgG,stdG,runG,runGstd])
+        # res.add("Measurement Greedy",[0,0,0,avgGM,stdGM,runGM,runGMstd])
+        # res.add("Coverage Greedy",[0,0,0,avgGC,stdGC,runGC,runGCstd])
+        # res.toLatex(f"k{k}c{cutoff}p{prior}")
+
+        res.add("Random",[0,infB,infBstd,avgB,stdB,runB,runBstd])
+        res.add("Greedy",[0,infG,infGstd,avgG,stdG,runG,runGstd])
+        res.add("CMA-ES",[0,infC,infCstd,avgC,stdC,runC,runCstd])
+        res.toLatex(f"part1_k{k}c{cutoff}p{prior}")
+
         
-        return [plotrmserand,plotrmsegreedy,plotrmsegreedyMax,plotrmsegreedyCov]
+        # return [plotrmserand,plotrmsegreedy,plotrmsegreedyMax,plotrmsegreedyCov]
+        return [infB,infG,infC]
     
     def headless(self):           
             # print("\nGreedyTrace")
@@ -394,51 +423,81 @@ class Map:
         # plt.scatter(plotrmsegreedyMax, plotinfgreedyMax, label="Greedy Max")
         # plt.scatter(plotrmseTest,[50 for i in range(len(plotrmseTest))], label="Sanity Test")
 
-        fig, ([ax1, ax2, ax3], [ax4, ax5, ax6], [ax7, ax8, ax9]) = plt.subplots(3, 3)
+        # fig, ([ax1, ax2, ax3], [ax4, ax5, ax6], [ax7, ax8, ax9]) = plt.subplots(3, 3)
 
-        for ax in [ax1,ax2,ax3,ax4,ax5,ax6,ax7,ax8,ax9]:
-            ax.xaxis.set_visible(False)
+        # for ax in [ax1,ax2,ax3,ax4,ax5,ax6,ax7,ax8,ax9]:
+        #     ax.xaxis.set_visible(False)
 
-        ax1.set_title("K = 5") 
-        ax2.set_title("Cutoff = 150") 
-        ax3.set_title("Prior Variance = 5") 
-        ax4.set_title("K = 10") 
-        ax5.set_title("Cutoff = 300") 
-        ax6.set_title("Prior Variance = 10") 
-        ax7.set_title("K = 15") 
-        ax8.set_title("Cutoff = 450") 
-        ax9.set_title("Prior Variance = 15") 
-
-
-        ret = self.run()
-        sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax1)
-        ret = self.run(cutoff=150)
-        sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax2)
-        ret = self.run(prior=5)
-        sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax3)
-        ret = self.run(k=10)
-        sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax4)
-        ret = self.run(cutoff=300)
-        sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax5)
-        ret = self.run(prior=10)
-        sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax6)
-        ret = self.run(k=15)
-        sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax7)
-        ret = self.run(cutoff=450)
-        sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax8)
-        ret = self.run(prior=15)
-        sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax9)
+        # ax1.set_title("K = 5") 
+        # ax2.set_title("Cutoff = 150") 
+        # ax3.set_title("Prior Variance = 5") 
+        # ax4.set_title("K = 10") 
+        # ax5.set_title("Cutoff = 300") 
+        # ax6.set_title("Prior Variance = 10") 
+        # ax7.set_title("K = 15") 
+        # ax8.set_title("Cutoff = 450") 
+        # ax9.set_title("Prior Variance = 15") 
 
 
-        default_palette = sns.color_palette()
-        legend_labels = ["Random","Greedy","Measurement Greedy","Coverage Greedy"]
-        legend_handles = [plt.Line2D([0], [0], marker='o', color=color, label=label, markerfacecolor=color, markersize=10) 
-                        for label, color in zip(legend_labels, default_palette[:len(legend_labels)])]
+        # ret = self.run()
+        # sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax1)
+        # ret = self.run(cutoff=150)
+        # sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax2)
+        # ret = self.run(prior=5)
+        # sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax3)
+        # ret = self.run(k=10)
+        # sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax4)
+        # ret = self.run(cutoff=300)
+        # sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax5)
+        # ret = self.run(prior=10)
+        # sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax6)
+        # ret = self.run(k=15)
+        # sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax7)
+        # ret = self.run(cutoff=450)
+        # sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax8)
+        # ret = self.run(prior=15)
+        # sns.boxplot(data=[ret[0],ret[1],ret[2],ret[3]], ax=ax9)
 
-        fig.legend(handles=legend_handles, labels=legend_labels, loc='lower center', ncol=4)
 
-        fig.text(0.06, 0.5, 'RMSE', va='center', rotation='vertical')
+        # default_palette = sns.color_palette()
+        # legend_labels = ["Random","Greedy","Measurement Greedy","Coverage Greedy"]
+        # legend_handles = [plt.Line2D([0], [0], marker='o', color=color, label=label, markerfacecolor=color, markersize=10) 
+        #                 for label, color in zip(legend_labels, default_palette[:len(legend_labels)])]
+
+        # fig.legend(handles=legend_handles, labels=legend_labels, loc='lower center', ncol=4)
+
+        # fig.text(0.06, 0.5, 'RMSE', va='center', rotation='vertical')
         
+        # plt.show()
+
+
+        plotb = []
+        plotg = []
+        plotc = []
+
+        for i in range(1,21):
+            ret = self.run(k=i)
+            plotb.append(ret[0])
+            plotg.append(ret[1])
+            plotc.append(ret[2])
+
+        def bound(x):
+            return (1 - (1 / np.e)) * x
+
+        x = np.linspace(1, 20, 20)
+
+        plotbound = [bound(x) for x in plotb]
+
+        # Plot the value as a dashed line
+        plt.plot(x, plotb,color='red', label="Brute-force")
+        plt.plot(x, plotg,color='orange', label="Greedy")
+        plt.plot(x, plotc,color='green', label="CMA-ES")
+        plt.plot(x, plotbound, linestyle='--', color='blue', label=r'$1 - \frac{1}{e} \cdot x$')
+        plt.xlabel('X-axis')
+        plt.ylabel('Y-axis')
+        plt.title('Plot of 1 - 1/e * x')
+        plt.grid(True)
+        plt.legend()
         plt.show()
 
 
