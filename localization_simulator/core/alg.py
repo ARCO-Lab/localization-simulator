@@ -9,7 +9,6 @@ import random
 from ..utils.nls import NLS
 
 def random_set(param):
-    print(f"len Param P: {len(param.p)}")
     start = perf_counter()
     solution = set()
     while len(solution) < param.k:
@@ -34,8 +33,6 @@ def brute(param):
             solution = c
     
     stop = perf_counter()
-    print("time: " + str(stop-start))
-    print("max inf gain: " + str(inf_max))
     return [solution,inf_max,0,stop-start]
 
 def bruteRMSE(param, initial):
@@ -58,8 +55,6 @@ def bruteRMSE(param, initial):
             solution = c
     
     stop = perf_counter()
-    print("time: " + str(stop-start))
-    print("min Rmse: " + str(rmse_min))
     return [solution,rmse_min,0,stop-start]
 
 
@@ -82,8 +77,6 @@ def greedy(param):
         solution = solution.union({j_best})
 
     stop = perf_counter()
-    print("time: " + str(stop-start))
-    print("max inf gain: " + str(inf_max))
     return [solution,inf_max,0,stop-start]
 
 def greedyTrace(param):
@@ -105,8 +98,6 @@ def greedyTrace(param):
         solution = solution.union({j_best})
 
     stop = perf_counter()
-    print("time: " + str(stop-start))
-    print("max inf gain: " + str(inf_max))
     return [solution,inf_max,0,stop-start]
 
 def greedyMinEig(param):
@@ -128,8 +119,6 @@ def greedyMinEig(param):
         solution = solution.union({j_best})
 
     stop = perf_counter()
-    print("time: " + str(stop-start))
-    print("max inf gain: " + str(inf_max))
     return [solution,inf_max,0,stop-start]
 
 def greedyAncMax(param):
@@ -202,8 +191,6 @@ def cma_es(param):
     continuous_sol = es.result.xbest
     solution = np.argsort(-continuous_sol)[:param.k]
     stop = perf_counter()
-    print("time: " + str(stop-start))
-    print("max inf gain: " + str(inf_max))
     return [solution,inf_max,0,stop-start]
 
 if __name__ == "__main__":

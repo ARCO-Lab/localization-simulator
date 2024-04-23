@@ -130,7 +130,7 @@ class Map:
         noise = np.random.normal(0, np.sqrt(variance), size=np.shape(d))
         return d + noise
     
-    def run(self, k=5, cutoff=250, prior=8):
+    def run(self, k=5, cutoff=250, prior=8, ancList=None):
         """ Performs the simulation without any visualization
         """
         # print(f"ISOTROPIC VARIANCE: {self.isotropic}")
@@ -192,7 +192,8 @@ class Map:
 
         for segment in range(0,runs):
             # anchorLocations =  np.column_stack((np.random.randint(10,1050,50),np.random.randint(0,610,50)))
-            anchorLocations =  np.column_stack((np.random.randint(700,1050,20),np.random.randint(0,610,20)))
+            if ancList:
+                anchorLocations = ancList[segment]
             d = self.addNoise(anchorLocations,self.poses,self.variance, cutoff)
             # d = self.addNoiseRmse(anchorLocations,self.poses,self.variance)
 
@@ -320,7 +321,7 @@ class Map:
         print("6")
         runBstd = np.std(avgRunBrute)
         runGstd = np.std(avgRunGreedy)
-        runCstd = np.mean(avgRunCma)
+        runCstd = np.std(avgRunCma)
 
 
         # res.add("Random",[0,0,0,avgR,stdR,runR,runRstd])
@@ -470,13 +471,16 @@ class Map:
         
         # plt.show()
 
+        ancList =  [np.column_stack((np.random.randint(10,1050,20),np.random.randint(0,610,20))) for i in range(3)]
 
-        plotb = []
-        plotg = []
-        plotc = []
 
-        for i in range(1,21):
-            ret = self.run(k=i)
+
+        plotb = [0]
+        plotg = [0]
+        plotc = [0]
+
+        for i in range(1,8):
+            ret = self.run(k=i,ancList=ancList)
             plotb.append(ret[0])
             plotg.append(ret[1])
             plotc.append(ret[2])
@@ -484,14 +488,14 @@ class Map:
         def bound(x):
             return (1 - (1 / np.e)) * x
 
-        x = np.linspace(1, 20, 20)
+        x = np.linspace(0, 7, 8)
 
         plotbound = [bound(x) for x in plotb]
 
         # Plot the value as a dashed line
         plt.plot(x, plotb,color='red', label="Brute-force")
-        plt.plot(x, plotg,color='orange', label="Greedy")
         plt.plot(x, plotc,color='green', label="CMA-ES")
+        plt.plot(x, plotg,color='orange', label="Greedy")
         plt.plot(x, plotbound, linestyle='--', color='blue', label=r'$1 - \frac{1}{e} \cdot x$')
         plt.xlabel('K')
         plt.ylabel('Information Gain')

@@ -59,6 +59,7 @@ def fim(x, p, d, sol, isotropic, variance, hessian=False, trace=False):
     """
     m = len(x)
     inf = np.repeat(np.linalg.inv(isotropic)[np.newaxis, :, :], m, axis=0)
+    emptyInf = sum([log_det(inf[i]) for i in range(m)])
     for _ in sol:
         for i in range(m):
             if hessian:
@@ -71,7 +72,7 @@ def fim(x, p, d, sol, isotropic, variance, hessian=False, trace=False):
     if trace:
         return sum([np.trace(inf[i]) for i in range(m)])
     else:
-        return sum([log_det(inf[i]) for i in range(m)])
+        return sum([log_det(inf[i]) for i in range(m)]) - emptyInf
 
 def hessian_range_localization(x, p, d):
     """

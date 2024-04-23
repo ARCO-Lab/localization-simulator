@@ -116,7 +116,7 @@ class NLS:
         # print(h)
 
         h_inv = np.linalg.pinv(h)
-        delta_pose = np.dot(h_inv, g)
+        delta_pose = np.dot(h_inv, g) 
         
         est_x -= delta_pose[0]
         est_y -= delta_pose[1]
