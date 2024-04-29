@@ -122,7 +122,7 @@ class Traj3D(Traj2D):
             self.data["y"].extend(np.linspace(self.poses[cur][1], self.poses[cur+1][1], self.interval))
             self.data["z"].extend(np.linspace(self.poses[cur][2], self.poses[cur+1][2], self.interval))
         self.df = pd.DataFrame(self.data)
-        print(self.df)
+        # print(self.df)
 
     def visualizeTraj(self):
         """Visualizes the trajectory using Matplotlib animation

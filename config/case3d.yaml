@@ -1,0 +1,25 @@
+name: "case3d"
+map: [1000,1000,1000]
+k: 2
+anchor:
+  - name: "a"
+    location: [8,5]
+    cutoff: 0
+    error: [0,3]
+    colour: "red"
+  - name: "b"
+    location: [6,8]
+    cutoff: 0
+    error: [0,3]
+    colour: "blue"
+  - name: "c"
+    location: [6,14]
+    cutoff: 0
+    error: [0,3]
+    colour: "red"
+pose: [[1000,1000,1000], [860,820,830], [610,600,550], [470,380,450], [350,500,200],
+       [200,580,50], [120,700,140], [100,800,300], [150,880,550], [240,1000,900]]
+isotropic: 10
+sensor_measurement_variance: 4
+hessian: False
+

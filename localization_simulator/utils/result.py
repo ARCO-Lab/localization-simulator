@@ -90,13 +90,6 @@ class Parameters():
             f.write("p:\n")
             f.write(df_p.to_string(index=False) + "\n\n")
 
- 
-class Result():
-
-    def __init__(self) -> None:
-        pass
-
-
 class Result():
 
     def __init__(self, *args) -> None:

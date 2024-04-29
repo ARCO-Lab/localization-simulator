@@ -134,8 +134,8 @@ class Map:
         """ Performs the simulation without any visualization
         """
         # print(f"ISOTROPIC VARIANCE: {self.isotropic}")
-        res = Result("Random","Greedy","Measurement Greedy","Coverage Greedy")
-        res2 = Result("Brute-force","Greedy","CMA-ES")
+        # res = Result("Random","Greedy","Measurement Greedy","Coverage Greedy")
+        res2 = Result("Brute-Force","Greedy","CMA-ES")
 
         self.k = k
         self.isotropic = isotropic(self.nDim,prior)
@@ -198,9 +198,9 @@ class Map:
             # d = self.addNoiseRmse(anchorLocations,self.poses,self.variance)
 
             nls = NLS(self.points,self.gradNorms,anchorLocations,variance=0.01,tolerance=1e-9)
-
             param = Parameters(self.dim,self.k,self.poses,anchorLocations,d,self.isotropic,self.variance)
-            noise = np.random.normal(0, np.sqrt(self.isotropic[0][0]), (len(self.poses), 2))
+            # noise = np.random.normal(0, np.sqrt(self.isotropic[0][0]), (len(self.poses), 2))
+            noise = np.random.normal(0, np.sqrt(self.isotropic[0][0]), (len(self.poses), 3))
             initial = self.poses + noise
 
 
@@ -227,7 +227,8 @@ class Map:
             print(resBrute[0])
             aBrute = np.array([anchorLocations[i] for i in resBrute[0]])
             plotinfBrute.append(resBrute[1])
-            rmseBrute = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i],[d[i][j] for j in resBrute[0]], aBrute, self.variance, self.isotropic) for i in range(len(self.poses))]))
+            rmseBrute = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i],[d[i][j] for j in resBrute[0]], aBrute, self.variance, self.isotropic, use3d=True) for i in range(len(self.poses))]))
+            # rmseBrute = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i],[d[i][j] for j in resBrute[0]], aBrute, self.variance, self.isotropic) for i in range(len(self.poses))]))
             plotrmseBrute.append(rmseBrute)
             avgRmseBrute.append(rmseBrute)
             avgRunBrute.append(resBrute[3])
@@ -241,7 +242,7 @@ class Map:
             print(resGreedy[0])
             aGreedy = np.array([anchorLocations[i] for i in resGreedy[0]])
             plotinfgreedy.append(resGreedy[1])
-            rmseGreedy = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i], [d[i][j] for j in resGreedy[0]], aGreedy, self.variance, self.isotropic) for i in range(len(self.poses))]))
+            rmseGreedy = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i], [d[i][j] for j in resGreedy[0]], aGreedy, self.variance, self.isotropic, use3d=True) for i in range(len(self.poses))]))
             plotrmsegreedy.append(rmseGreedy)
             avgRmseGreedy.append(rmseGreedy)
             avgRunGreedy.append(resGreedy[3])
@@ -284,7 +285,7 @@ class Map:
             print(resCmaes[0])
             aCmaes = np.array([anchorLocations[i] for i in resCmaes[0]])
             plotinfcma.append(resCmaes[1])
-            rmseCma = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i],[d[i][j] for j in resCmaes[0]], aCmaes, self.variance, self.isotropic) for i in range(len(self.poses))]))
+            rmseCma = np.sqrt(np.mean([nls.rmse(initial[i],self.poses[i],[d[i][j] for j in resCmaes[0]], aCmaes, self.variance, self.isotropic, use3d=True) for i in range(len(self.poses))]))
             plotrmsecma.append(rmseCma)
             avgRmseCma.append(rmseCma)
             avgRunCma.append(resCmaes[3])
@@ -292,33 +293,33 @@ class Map:
             print("____________________________________________________________________________________________________________________________________________________________________")     
 
 
-        print("1")
+        # print("1")
         infB = np.mean(plotinfBrute)
         infG = np.mean(plotinfgreedy)
         infC = np.mean(plotinfcma)
 
-        print("2")
+        # print("2")
         infBstd = np.std(plotinfBrute)
         infGstd = np.std(plotinfgreedy)
         infCstd = np.std(plotinfcma)
 
-        print("3")
+        # print("3")
         avgB = np.mean(avgRmseBrute)
         avgG = np.mean(avgRmseGreedy)
         avgC = np.mean(avgRmseCma)
 
-        print("4")
+        # print("4")
         stdB = np.std(avgRmseBrute)
         stdG = np.std(avgRmseGreedy)
         stdC = np.std(avgRmseCma)
 
-        print("5")
+        # print("5")
         runB = np.mean(avgRunBrute)
         runG = np.mean(avgRunGreedy)
         runC = np.mean(avgRunCma)
 
 
-        print("6")
+        # print("6")
         runBstd = np.std(avgRunBrute)
         runGstd = np.std(avgRunGreedy)
         runCstd = np.std(avgRunCma)
@@ -330,10 +331,10 @@ class Map:
         # res.add("Coverage Greedy",[0,0,0,avgGC,stdGC,runGC,runGCstd])
         # res.toLatex(f"k{k}c{cutoff}p{prior}")
 
-        res.add("Random",[0,infB,infBstd,avgB,stdB,runB,runBstd])
-        res.add("Greedy",[0,infG,infGstd,avgG,stdG,runG,runGstd])
-        res.add("CMA-ES",[0,infC,infCstd,avgC,stdC,runC,runCstd])
-        res.toLatex(f"part1_k{k}c{cutoff}p{prior}")
+        res2.add("Brute-Force",[0,infB,infBstd,avgB,stdB,runB,runBstd])
+        res2.add("Greedy",[0,infG,infGstd,avgG,stdG,runG,runGstd])
+        res2.add("CMA-ES",[0,infC,infCstd,avgC,stdC,runC,runCstd])
+        res2.toLatex(f"case3d")
 
         
         # return [plotrmserand,plotrmsegreedy,plotrmsegreedyMax,plotrmsegreedyCov]
@@ -471,7 +472,8 @@ class Map:
         
         # plt.show()
 
-        ancList =  [np.column_stack((np.random.randint(10,1050,20),np.random.randint(0,610,20))) for i in range(3)]
+        # ancList =  [np.column_stack((np.random.randint(10,1050,20),np.random.randint(0,610,20))) for i in range(3)]
+        ancList =  [np.column_stack((np.random.randint(0,1000,20),np.random.randint(0,1000,20),np.random.randint(0,1000,20))) for i in range(3)]
 
 
 
@@ -479,7 +481,7 @@ class Map:
         plotg = [0]
         plotc = [0]
 
-        for i in range(1,8):
+        for i in range(1,11):
             ret = self.run(k=i,ancList=ancList)
             plotb.append(ret[0])
             plotg.append(ret[1])
@@ -488,7 +490,7 @@ class Map:
         def bound(x):
             return (1 - (1 / np.e)) * x
 
-        x = np.linspace(0, 7, 8)
+        x = np.linspace(0, 2, 3)
 
         plotbound = [bound(x) for x in plotb]
 

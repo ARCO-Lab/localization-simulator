@@ -13,8 +13,6 @@ import numpy as np
 import yaml
 import os
 
-
-
 def customRoutine(config, headless=False):
     """A custom routine as provided by a config yaml file
 
