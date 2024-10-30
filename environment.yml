@@ -1,3 +1,4 @@
+
 name: localization
 channels:
   - defaults
@@ -76,3 +77,4 @@ dependencies:
       - wcwidth==0.2.6
       - widgetsnbextension==4.0.9
 prefix: /home/user/miniconda3/envs/localization
+
