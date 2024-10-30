@@ -50,7 +50,7 @@ class Map:
         """
         self.dim = dim
         self.nDim = len(dim)
-        # self.fig, self.ax = Plot.create2D(self.dim) if self.nDim==2 else Plot.create3D(self.dim)
+        self.fig, self.ax = Plot.create2D(self.dim) if self.nDim==2 else Plot.create3D(self.dim)
         self.trajectory = None
         self.points = []
         self.gradNorms = []

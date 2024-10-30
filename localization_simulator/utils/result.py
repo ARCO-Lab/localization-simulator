@@ -5,7 +5,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from ..core.inf import isotropic, addNoise
-from ..core.alg import greedy,brute,cma_es, random_set
+#from ..core.alg import brute,cma_es, random_set
 import copy
 
 class Parameters():
@@ -45,7 +45,7 @@ class Parameters():
         with open(f"{path}/{name}", 'w') as f:
             f.write(f"dim: {self.dim}\n")
             f.write(f"# of poses: {len(self.x)}\n")
-            f.write(f"# of anchors: {len(p)}\n")
+            f.write(f"# of anchors: {len(self.p)}\n")
             f.write(f"k: {self.k}\n")
             f.write(f"iso_var: {self.iso_var[0][0]}\n")
             f.write(f"sensor_var: {self.sensor_var}\n")

@@ -1,6 +1,6 @@
 from time import perf_counter
 from .inf import fim, isotropic
-# from ..utils.result import Parameters
+from ..utils.result import Parameters
 import numpy as np
 import pandas as pd
 from itertools import combinations

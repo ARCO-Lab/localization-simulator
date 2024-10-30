@@ -50,6 +50,7 @@ dependencies:
       - pexpect==4.8.0
       - pickleshare==0.7.5
       - pillow==10.0.1
+      - pip==24.2
       - platformdirs==3.10.0
       - prompt-toolkit==3.0.39
       - ptyprocess==0.7.0
