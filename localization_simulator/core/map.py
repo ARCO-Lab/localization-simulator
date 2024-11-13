@@ -74,12 +74,12 @@ class Map:
             anchorList (list[Anchor]): The list of anchors to place in a map.
         """
         self.anchors = anchorList
-        # if self.nDim == 2:
-        #     for a in anchorList:
-        #         self.ax.add_patch(Rectangle(a.location,0.5,0.5,fc="black",ec=a.clr))
-        # else:
-        #     for a in anchorList:
-        #         self.ax.scatter(a.location[0], a.location[1], a.location[2], c='black', edgecolors=a.clr ,marker='o', s=100)
+        if self.nDim == 2:
+            for a in anchorList:
+                self.ax.add_patch(Rectangle(a.location,0.5,0.5,fc="black",ec=a.clr))
+        else:
+            for a in anchorList:
+                self.ax.scatter(a.location[0], a.location[1], a.location[2], c='black', edgecolors=a.clr ,marker='o', s=100)
             
     def loadTraj(self, poses, interval):
         """Method for loading a trajectory into a map
@@ -141,18 +141,18 @@ class Map:
         self.isotropic = isotropic(self.nDim,prior)
 
         runs = 3
-        # anchorLocations = np.array([a.location for a in self.anchors])
+        anchorLocations = np.array([a.location for a in self.anchors])
 
         
 
-        # d = self.addNoise(anchorLocations,self.poses,self.variance, cutoff)
+        d = self.addNoise(anchorLocations,self.poses,self.variance, cutoff)
 
-        # nls = NLS(self.points,self.gradNorms,anchorLocations,variance=0.01,tolerance=1e-9)
+        nls = NLS(self.points,self.gradNorms,anchorLocations,variance=0.01,tolerance=1e-9)
 
-        # param = Parameters(self.dim,self.k,self.poses,anchorLocations,d,self.isotropic,self.variance)
-        # noise = np.random.normal(0, np.sqrt(self.isotropic[0][0]), (len(self.poses), 2))
-        # # noise = np.zeros(np.shape(self.poses))
-        # initial = self.poses + noise
+        param = Parameters(self.dim,self.k,self.poses,anchorLocations,d,self.isotropic,self.variance)
+        noise = np.random.normal(0, np.sqrt(self.isotropic[0][0]), (len(self.poses), 2))
+        # noise = np.zeros(np.shape(self.poses))
+        initial = self.poses + noise
 
         plotinfBrute = []
         plotinfrand = []
