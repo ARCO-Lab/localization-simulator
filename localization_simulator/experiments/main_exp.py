@@ -5,7 +5,7 @@ Todo:
     * Improve the process of creating routines
 """
 from ..core.component import Anchor
-from .map import Map
+from ..core.map import Map
 from ..core.alg import *
 from ..utils.plot import Plot, postPlot
 from ..utils.helper import parseArgs
