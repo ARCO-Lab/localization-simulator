@@ -142,7 +142,6 @@ class Map:
 
         runs = 3
         anchorLocations = np.array([a.location for a in self.anchors])
-
         
 
         d = self.addNoise(anchorLocations,self.poses,self.variance, cutoff)

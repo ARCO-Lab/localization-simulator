@@ -57,10 +57,10 @@ def postPlot(points, gradNorms):
            plt.text(xi, yi, str(i), ha='right', va='bottom')
         plt.title(f"Approx for {x[0]},{y[0]}")
         plt.legend()
-        # plt.show()
-        plt.show(block=False)
-        plt.pause(2)
-        plt.close()
+        plt.show()
+        # plt.show(block=False)
+        # plt.pause(2)
+        # plt.close()
 
         fig, axs = plt.subplots(2)
         fig.suptitle(f"Approx for {x[0]},{y[0]}")
@@ -68,8 +68,8 @@ def postPlot(points, gradNorms):
         log_gn = np.log(gn)
         axs[1].plot(range(1, len(log_gn) + 1), log_gn, color='orange', marker='o', label='Log Grad Norms')
 
-        plt.show(block=False)
+        # plt.show(block=False)
         # input("Press a key ")
-        plt.pause(2)
-        plt.close()
+        # plt.pause(2)
+        # plt.close()
 
