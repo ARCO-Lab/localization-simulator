@@ -35,7 +35,7 @@ def customRoutine(config, headless=False):
 def sampleRoutine2d():
     """A sample routine for a 2D simulation
     """
-    anchorList2d = [Anchor("a",(3,3),0,(0,3),"red"),Anchor("b",(14,14),0,(0,3),"blue"),Anchor("c",(18,12),0,(0,3),"red")]
+    anchorList2d = [Anchor("a",(3,3),0,(0,3),"green"),Anchor("b",(14,14),0,(0,3),"blue"),Anchor("c",(18,12),0,(0,3),"red")]
     m = Map((20,20))
     m.placeAnchor(anchorList2d)
     m.loadTraj([(0,0),(8,8),(6,6),(4,5),(10,4)],5)
@@ -45,7 +45,7 @@ def sampleRoutine2d():
 def sampleRoutine3d():
     """A sample routine for a 3D simulation
     """
-    anchorList3d = [Anchor("a",(3,3,3),0,(0,3),"red"),Anchor("b",(14,14,14),0,(0,3),"blue"),Anchor("c",(18,12,13),0,(0,3),"red")]
+    anchorList3d = [Anchor("a",(3,3,3),0,(0,3),"green"),Anchor("b",(14,14,14),0,(0,3),"blue"),Anchor("c",(18,12,13),0,(0,3),"red")]
     m = Map((20,20,20))
     m.placeAnchor(anchorList3d)
     m.loadTraj([(0,0,0),(8,8,8),(6,6,7),(4,5,4),(10,4,2)],12)

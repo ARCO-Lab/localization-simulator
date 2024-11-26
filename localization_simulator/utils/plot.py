@@ -68,8 +68,10 @@ def postPlot(points, gradNorms):
         log_gn = np.log(gn)
         axs[1].plot(range(1, len(log_gn) + 1), log_gn, color='orange', marker='o', label='Log Grad Norms')
 
+        plt.show()
+
         # plt.show(block=False)
-        # input("Press a key ")
-        # plt.pause(2)
+        input("Press a key ")
+        plt.pause()
         # plt.close()
 

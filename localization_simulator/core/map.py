@@ -562,8 +562,7 @@ class Map:
 
         value_root, value_label, listBox = self.createWindow()
         
-        ani = FuncAnimation(self.fig, update, frames=self.trajectory.interval*(len(self.trajectory.poses)-1),
-                            blit=True, interval=500//self.trajectory.interval*(len(self.trajectory.poses)-1), repeat=False)
+        ani = FuncAnimation(self.fig, update, frames=self.trajectory.interval*(len(self.trajectory.poses)-1), blit=False, interval=500//self.trajectory.interval*(len(self.trajectory.poses)-1), repeat=True)
         
         plt.show()
         value_root.mainloop()
