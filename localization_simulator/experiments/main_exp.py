@@ -58,7 +58,7 @@ if __name__ == "__main__":
     file = "case3d"
     open(f"config/{file}.yaml","r") 
     y = yaml.safe_load(file)
-    sampleRoutine3d()
+    sampleRoutine2d()
     # customRoutine(y,headless)
     
     #  if config_file:
