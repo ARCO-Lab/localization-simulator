@@ -70,7 +70,7 @@ def pose_to_odometry(poses):
         del_y = del_travel[j][1]
         del_theta = del_travel[j][2]
 
-        # new strategy for calulation
+        # new strategy for calculation
 
         # need to adapt to the current state of the overleaf document
 
@@ -138,7 +138,7 @@ def main(odom_meas, beacon_placement, beacon_meas):
             gtsam.BetweenFactorPose2(pose_keys[f"X{i}"], pose_keys[f"X{i+1}"], gtsam.Pose2(rel_transforms[i+1]), ODOMETRY_NOISE)) 
     
 
-    # loop this to match the previous strategy but need to match poses to the measurments corresponding
+    # loop this to match the previous strategy but need to match poses to the measurements corresponding
     for i in range(len(beacon_meas)):
         
         graph.add(
